@@ -2,6 +2,8 @@
 {
     using Ecosystem_Simulator.Core;
     using Ecosystem_Simulator.Core.Interfaces;
+    using Ecosystem_Simulator.Core.Policies;
+    using Ecosystem_Simulator.Entities;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -11,8 +13,11 @@
 
         // This holds every active entity in the simulation
         private readonly List<IUpdatable> _entities = new List<IUpdatable>();
+        public IEnumerable<IEntity> Entities => _entities;
         private readonly float _width;
+        public float Width => _width;
         private readonly float _height;
+        public float Height => _height;
         private List<IUpdatable> _spawnQueue = new List<IUpdatable>();
 
         //Initializer 
@@ -21,6 +26,7 @@
             _width = width;
             _height = height;
         }
+
 
         // We need a way to put things into the world
         public void Spawn(IUpdatable entity)
@@ -102,6 +108,27 @@
                 {
                     movable.ForcePosition(new Vector2(x, y));
                 }
+            }
+        }
+
+        public void Seed(int critterCount, int foodCount)
+        {
+            StandardMetabolism energyPolicy = new StandardMetabolism();
+
+            //  Spawn Critters
+            for (int i = 0; i < critterCount; i++)
+            {
+                // Give each critter its OWN genome instance so they can mutate later
+                DefaultGenome genome = new DefaultGenome();
+                Vector2 pos = new Vector2(Settings.Rng.Next(0, (int)_width), Settings.Rng.Next(0, (int)_height));
+                Spawn(new Critter(pos, energyPolicy, genome));
+            }
+
+            //  Spawn Food (
+            for (int j = 0; j < foodCount; j++)
+            {
+                Vector2 pos = new Vector2(Settings.Rng.Next(0, (int)_width), Settings.Rng.Next(0, (int)_height));
+                Spawn(new FoodPellet(pos));
             }
         }
     }

@@ -26,7 +26,7 @@ namespace Ecosystem_Simulator.Entities
             _age += deltaTime;
 
             // Reproduce if old enough and not too crowded
-            if (_age > 15.0)
+            if (_age > 10.0)
             {
                 _age = 0;
                 // Simple "Seed" logic: spawn a new pellet nearby

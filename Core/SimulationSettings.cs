@@ -19,7 +19,7 @@ namespace Ecosystem_Simulator.Core
         public const float EatDistance = 5.0f;
 
         //Entities Settings
-        public const float SightRadius = 10f;
-        public const int CritterSpeed = 5;
+        public const float SightRadius = 50f;
+        public const float CritterSpeed = 150f;
     }
 }

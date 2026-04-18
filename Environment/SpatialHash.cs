@@ -49,11 +49,11 @@ namespace Ecosystem_Simulator.Environment
             int oldKey = GetHashKey(oldPos);
             int newKey = GetHashKey(entity.Position);
 
-            // OPTIMIZATION: Only do work if the critter actually crossed a boundary
-            if (oldKey != newKey)
+            // OPTIMIZATION: Only do work if the critter actually crossed a boundary 
+            if (oldKey != newKey && _buckets.TryGetValue(oldKey, out var oldBucket) && _buckets.TryGetValue(newKey, out var newBucket))
             {
-                _buckets[oldKey].Remove(entity);
-                _buckets[newKey].Add(entity);
+                oldBucket.Remove(entity);
+                newBucket.Add(entity);
             }
         }
 

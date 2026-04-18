@@ -3,14 +3,26 @@ using Ecosystem_Simulator.Core.Interfaces;
 using Ecosystem_Simulator.Core.Policies;
 using Ecosystem_Simulator.Entities;
 using Ecosystem_Simulator.Environment;
+using Ecosystem_Simulator.UI;
 using System;
+using System.Windows.Forms;
 using System.Threading;
 
 namespace Ecosystem_Simulator
 {
     internal class Program
     {
-        static void Main(string[] args)
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
+            // This is the line that actually "calls" the form into existence
+            Application.Run(new Form1());
+
+        }
+        /*static void Main(string[] args)
         {
 
             World world = new World(Settings.WorldWidth,Settings.WorldHeight);
@@ -31,6 +43,6 @@ namespace Ecosystem_Simulator
                 world.Tick(0.016);
                 Thread.Sleep(16);
             }
-        }
+        }*/
     }
 }

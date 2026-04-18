@@ -24,10 +24,14 @@ namespace Ecosystem_Simulator.Entities
             _metabolism = policy;
             _dna = dna;
             Energy = Settings.StartingEnergy;
+
+            float angle = (float)(Settings.Rng.NextDouble() * Math.PI * 2);
+            this.Velocity = new Vector2((float)Math.Cos(angle) * Settings.CritterSpeed, (float)Math.Sin(angle) * Settings.CritterSpeed) ; 
         }
 
         public void Update(double deltaTime, IEnumerable<IEntity> nearbyEntities)
         {
+            System.Diagnostics.Debug.WriteLine($"Critter at {Position.X}, {Position.Y} has Velocity {Velocity.X}, {Velocity.Y}");
             IEatable closestFood = null;
             float minDistanceSq = float.MaxValue;
             float eatDistSq = Settings.EatDistance * Settings.EatDistance;
@@ -40,7 +44,6 @@ namespace Ecosystem_Simulator.Entities
                     float dX = entity.Position.X - this.Position.X;
                     float dY = entity.Position.Y - this.Position.Y;
                     float distSq = (dX * dX) + (dY * dY);
-
                     // ACTION 1: EATING
                     if (distSq < eatDistSq)
                     {
@@ -49,8 +52,8 @@ namespace Ecosystem_Simulator.Entities
                         continue; // Move to next entity, this one is gone!
                     }
 
-                    // ACTION 2: SENSING (Only if hungry)
-                    if (this.Energy < (Settings.StartingEnergy * 0.8f))
+                    // ACTION 2: SENSING FOOD (Only if hungry)
+                    if (this.Energy < (Settings.StartingEnergy * 0.8f)) //less than 80% energy
                     {
                         if (distSq < sightRadiusSq && distSq < minDistanceSq)
                         {
@@ -102,11 +105,9 @@ namespace Ecosystem_Simulator.Entities
         }
         public void ApplyMovement(double deltaTime)
         {
-            //  Record the position BEFORE moving
-            Vector2 oldPos = this.Position;
             Vector2 newPos = new Vector2();
-            newPos.X = (float)(oldPos.X + (this.Velocity.X * deltaTime));
-            newPos.Y = (float)(oldPos.Y + (this.Velocity.Y * deltaTime));
+            newPos.X = (float)(this.Position.X + (this.Velocity.X * deltaTime));
+            newPos.Y = (float)(this.Position.Y + (this.Velocity.Y * deltaTime));
             this.Position = newPos;
         }
 
