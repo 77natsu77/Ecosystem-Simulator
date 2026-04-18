@@ -18,10 +18,10 @@ namespace Ecosystem_Simulator.Core
         public const float StartingEnergy = 2000f;
         public const float EatDistance = 10f;
         public const float BaseMetabolism = 1.0f;
-        public const float MovementMultiplier = 0.005f; //rate of metabolism goes up when moving
+        public const float MovementMultiplier = 0.015f; //rate of metabolism goes up when moving
 
         // Initialization settings
-        public const int InitialCritterNumber = 20;
+        public const int InitialCritterNumber = 10;
         public const int InitialFoodPelletNumber = 200;
 
         //Entities Settings
@@ -34,6 +34,5 @@ namespace Ecosystem_Simulator.Core
         //FoodPellet
         public const float FoodPelletRateOfReproduction = 5; //seconds
         public const int FoodPelletMaxNumberPerRegion = 20; //if the number of pellets around it exceeds this number, no more reproduction will occur
-        public const float FoodPelletEnergyValue = 150f;
     }
 }
