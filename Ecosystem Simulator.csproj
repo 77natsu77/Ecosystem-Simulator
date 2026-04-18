@@ -44,12 +44,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Core\DefaultGenome.cs" />
     <Compile Include="Core\Interfaces\IEatable.cs" />
     <Compile Include="Core\Interfaces\IEnergyPolicy.cs" />
+    <Compile Include="Core\Interfaces\IEntitity.cs" />
     <Compile Include="Core\Interfaces\IGenome.cs" />
+    <Compile Include="Core\Interfaces\IMovable.cs" />
     <Compile Include="Core\Interfaces\IRenderable.cs" />
     <Compile Include="Core\Interfaces\IUpdatable.cs" />
     <Compile Include="Core\Policies\StandardMetabolism.cs" />
+    <Compile Include="Core\SimpleColor.cs" />
+    <Compile Include="Core\SimulationSettings.cs" />
     <Compile Include="Core\Vector2.cs" />
     <Compile Include="Entities\FoodPellet.cs" />
     <Compile Include="Entities\Critter.cs" />

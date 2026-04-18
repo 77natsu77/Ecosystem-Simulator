@@ -1,11 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Ecosystem_Simulator.Core.Interfaces
+public interface IUpdatable : IEntity // For things that have logic (even static things like rotting food)
 {
-    public interface IUpdatable
-    {
-        Vector2 Position { get; }
-        Vector2 Velocity { get; }
-        void Update(double deltaTime, List<IUpdatable> nearbyEntities);
-    }
+    void Update(double deltaTime, List<IEntity> nearby);
 }

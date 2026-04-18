@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using Ecosystem_Simulator.Core;
+﻿using Ecosystem_Simulator.Core;
 using Ecosystem_Simulator.Core.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Net.Sockets;
 
 namespace Ecosystem_Simulator.Environment
 {
     public class SpatialHash
     {
-        private readonly float _cellSize = 100f;
+        private readonly float _cellSize = Settings.CellSize;
         // The core storage
         private readonly Dictionary<int, HashSet<IUpdatable>> _buckets = new Dictionary<int, HashSet<IUpdatable>>();
 
@@ -16,15 +17,30 @@ namespace Ecosystem_Simulator.Environment
         {
             
             int key = GetHashKey(entity.Position);
-            if (!_buckets.TryGetValue(key, out HashSet< IUpdatable > value))
+            if (!_buckets.TryGetValue(key, out HashSet< IUpdatable > bucket))
              {
                 _buckets.Add(key, new HashSet<IUpdatable> { entity });
             }
             else
             {
-                _buckets[key].Add(entity);
+                bucket.Add(entity);
             }
 
+        }
+
+        public void Unregister(IUpdatable entity)
+        {
+            int key = GetHashKey(entity.Position);
+
+            if (_buckets.TryGetValue(key, out var bucket))
+            {
+                bucket.Remove(entity);
+
+                if (bucket.Count == 0)
+                {
+                    _buckets.Remove(key);
+                }
+            }
         }
 
         // Moving between cells
@@ -42,9 +58,9 @@ namespace Ecosystem_Simulator.Environment
         }
 
         // This is what the Critter calls to "See" nearby food
-        public List<IUpdatable> GetNearby(Vector2 position)
+        public List<IEntity> GetNearby(Vector2 position)
         {
-            List<IUpdatable> GetNearbyList = new List<IUpdatable>();
+            List<IEntity> GetNearbyList = new List<IEntity>();
             int[] dx = { -1, 0, 1 };
             int[] dy = { -1, 0, 1 };
 
