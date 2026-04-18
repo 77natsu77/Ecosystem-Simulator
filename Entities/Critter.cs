@@ -13,20 +13,26 @@ namespace Ecosystem_Simulator.Entities
 
         public Vector2 Position { get; private set; }
         public Vector2 Velocity { get; private set; }
+        public float Speed { get; private set; }
         public float Energy { get; private set; }
         public bool IsPendingRemoval { get; private set; }
         private float _wanderAngle = 0f;
         public event SpawnRequestDelegate OnSpawnRequested;
 
-        public Critter(Vector2 startPos, IEnergyPolicy policy, IGenome dna)
+        public Critter(Vector2 startPos, IEnergyPolicy policy, IGenome dna, float parentSpeed = Settings.StartingCritterSpeed)
         {
-            Position = startPos;
-            _metabolism = policy;
-            _dna = dna;
-            Energy = Settings.StartingEnergy;
+            this.Position = startPos;
+            this._metabolism = policy;
+            this._dna = dna;
+            this.Energy = Settings.StartingEnergy;
 
+            // Mutation Logic: Speed can vary by +/- 10%
+            float mutationAmount = (float)(Math.Min(Settings.MaxCritterSpeed, (Settings.Rng.NextDouble() * 2 - 1) * (parentSpeed * 0.1)));
+            this.Speed = parentSpeed + mutationAmount;
+
+            // Set initial velocity using the new unique speed
             float angle = (float)(Settings.Rng.NextDouble() * Math.PI * 2);
-            this.Velocity = new Vector2((float)Math.Cos(angle) * Settings.CritterSpeed, (float)Math.Sin(angle) * Settings.CritterSpeed) ; 
+            this.Velocity = new Vector2((float)Math.Cos(angle) * this.Speed, (float)Math.Sin(angle) * this.Speed);
         }
 
         public void Update(double deltaTime, IEnumerable<IEntity> nearbyEntities)
@@ -35,7 +41,7 @@ namespace Ecosystem_Simulator.Entities
             IEatable closestFood = null;
             float minDistanceSq = float.MaxValue;
             float eatDistSq = Settings.EatDistance * Settings.EatDistance;
-            float sightRadiusSq = Settings.SightRadius * Settings.SightRadius;
+            float sightRadiusSq = Settings.CritterSightRadius * Settings.CritterSightRadius;
 
             foreach (IEntity entity in nearbyEntities)
             {
@@ -75,7 +81,27 @@ namespace Ecosystem_Simulator.Entities
             }
 
             ApplyMovement(deltaTime);
-            this.Energy -= _metabolism.CalculateLoss(Velocity, deltaTime);
+            this.Energy -= _metabolism.CalculateLoss(this.Velocity, deltaTime);
+            if (this.Energy >= Settings.CritterReproductionThreshold)
+            {
+                //  Pay the energy cost (giving half to the baby)
+                this.Energy /= 2;
+
+                //  Create the offspring (at the parent's position)
+                var baby = new Critter(this.Position, _metabolism, new DefaultGenome(), this.Speed);
+                baby.Energy = this.Energy; // Start baby with half the parent's energy
+
+                //  Trigger spawn event
+                OnSpawnRequested?.Invoke(baby);
+            }
+
+            if (this.Energy <= 0)
+            {
+                this.IsPendingRemoval = true; 
+                return;
+            }
+
+           
         }
 
         public float CalculateDistance(Vector2 A, Vector2 B)
@@ -120,8 +146,8 @@ namespace Ecosystem_Simulator.Entities
             if (distance > 0.1f) // Avoid division by zero
             {
                 // Normalize and scale by speed
-                float moveX = (diffX / distance) * Settings.CritterSpeed;
-                float moveY = (diffY / distance) * Settings.CritterSpeed;
+                float moveX = (diffX / distance) * this.Speed;
+                float moveY = (diffY / distance) * this.Speed;
 
                 this.Velocity = new Vector2(moveX, moveY);
             }
@@ -135,8 +161,8 @@ namespace Ecosystem_Simulator.Entities
             _wanderAngle += (float)(Settings.Rng.NextDouble() * 0.5 - 0.25); // Small jitter
 
             // Move a bit slower when wondering to reduce energy consumption
-            float moveX = (float)Math.Cos(_wanderAngle) * (Settings.CritterSpeed * 0.5f);
-            float moveY = (float)Math.Sin(_wanderAngle) * (Settings.CritterSpeed * 0.5f);
+            float moveX = (float)Math.Cos(_wanderAngle) * (this.Speed * 0.5f);
+            float moveY = (float)Math.Sin(_wanderAngle) * (this.Speed * 0.5f);
 
             this.Velocity = new Vector2(moveX, moveY);
         }

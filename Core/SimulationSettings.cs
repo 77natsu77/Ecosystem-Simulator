@@ -4,7 +4,7 @@ namespace Ecosystem_Simulator.Core
 {
     public static class Settings
     {
-
+        // RNG
         public static readonly Random Rng = new Random();
 
         // World Dimensions
@@ -15,11 +15,25 @@ namespace Ecosystem_Simulator.Core
         public const float CellSize = 100;
 
         // Simulation Balance
-        public const float StartingEnergy = 100f;
-        public const float EatDistance = 5.0f;
+        public const float StartingEnergy = 2000f;
+        public const float EatDistance = 10f;
+        public const float BaseMetabolism = 1.0f;
+        public const float MovementMultiplier = 0.005f; //rate of metabolism goes up when moving
+
+        // Initialization settings
+        public const int InitialCritterNumber = 20;
+        public const int InitialFoodPelletNumber = 200;
 
         //Entities Settings
-        public const float SightRadius = 50f;
-        public const float CritterSpeed = 150f;
+        //Critters
+        public const float CritterSightRadius = 60f;
+        public const float StartingCritterSpeed = 150f;
+        public const float MaxCritterSpeed = StartingCritterSpeed * 2;
+        public const float CritterReproductionThreshold = StartingEnergy * 1.3f;
+
+        //FoodPellet
+        public const float FoodPelletRateOfReproduction = 5; //seconds
+        public const int FoodPelletMaxNumberPerRegion = 20; //if the number of pellets around it exceeds this number, no more reproduction will occur
+        public const float FoodPelletEnergyValue = 150f;
     }
 }
