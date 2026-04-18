@@ -1,4 +1,5 @@
 ﻿using Ecosystem_Simulator.Core;
+using Ecosystem_Simulator.Core.delegates;
 using Ecosystem_Simulator.Core.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -14,60 +15,64 @@ namespace Ecosystem_Simulator.Entities
         public Vector2 Velocity { get; private set; }
         public float Energy { get; private set; }
         public bool IsPendingRemoval { get; private set; }
+        private float _wanderAngle = 0f;
+        public event SpawnRequestDelegate OnSpawnRequested;
 
         public Critter(Vector2 startPos, IEnergyPolicy policy, IGenome dna)
         {
             Position = startPos;
             _metabolism = policy;
             _dna = dna;
-            Energy = 100f;
+            Energy = Settings.StartingEnergy;
         }
 
-        public void Update(double deltaTime, List<IEntity> nearbyEntities)
+        public void Update(double deltaTime, IEnumerable<IEntity> nearbyEntities)
         {
-            //  Record the position BEFORE moving
-            Vector2 oldPos = this.Position;
-            Vector2 newPos = new Vector2();
+            IEatable closestFood = null;
+            float minDistanceSq = float.MaxValue;
+            float eatDistSq = Settings.EatDistance * Settings.EatDistance;
+            float sightRadiusSq = Settings.SightRadius * Settings.SightRadius;
 
-            //  Perform Movement
-            //  NewPos = OldPos + (Velocity * deltaTime)
-            newPos.X = (float)(oldPos.X + (this.Velocity.X * deltaTime));
-            newPos.Y = (float)(oldPos.Y + (this.Velocity.Y * deltaTime));
-            this.Position = newPos;
-
-
-            //sensing food
             foreach (IEntity entity in nearbyEntities)
             {
-                if (entity is IEatable food)
+                if (entity is IEatable food && !food.IsPendingRemoval)
                 {
-                    float dist = CalculateDistance(this.Position, entity.Position);
+                    float dX = entity.Position.X - this.Position.X;
+                    float dY = entity.Position.Y - this.Position.Y;
+                    float distSq = (dX * dX) + (dY * dY);
 
-                    if (dist < (Settings.EatDistance * Settings.EatDistance)) // Close enough to eat
+                    // ACTION 1: EATING
+                    if (distSq < eatDistSq)
                     {
-                        this.Energy += food.NutritionalValue;
-                        food.Consume(); // This should set its 'IsExpired' to true
+                        this.Energy += food.EnergyValue;
+                        food.Consume();
+                        continue; // Move to next entity, this one is gone!
+                    }
+
+                    // ACTION 2: SENSING (Only if hungry)
+                    if (this.Energy < (Settings.StartingEnergy * 0.8f))
+                    {
+                        if (distSq < sightRadiusSq && distSq < minDistanceSq)
+                        {
+                            minDistanceSq = distSq;
+                            closestFood = food;
+                        }
                     }
                 }
             }
 
-            // Inside Critter.Update
-            bool isHungry = this.Energy < (Settings.StartingEnergy * 0.5f);
-            
-            if (isHungry)
+            // DECISION PHASE
+            if (closestFood != null)
             {
-                // 1. Find Closest Food
-                // 2. Set Velocity toward it (Seek behavior)
+                SteerTowards(closestFood.Position);
             }
             else
             {
-                // 1. Wander aimlessly (Save energy)
-                // 2. Or look for a mate? (Phase 2)
+                Wander(deltaTime); // Keep moving if nothing is found
             }
 
-            //  Energy Consumption
-            float cost = _metabolism.CalculateLoss(Velocity, deltaTime);
-            this.Energy -= cost;
+            ApplyMovement(deltaTime);
+            this.Energy -= _metabolism.CalculateLoss(Velocity, deltaTime);
         }
 
         public float CalculateDistance(Vector2 A, Vector2 B)
@@ -83,6 +88,8 @@ namespace Ecosystem_Simulator.Entities
             newVelocity.X = -this.Velocity.X;
             newVelocity.Y = this.Velocity.Y;
             this.Velocity = newVelocity;
+            // Sync the wander angle to the new direction
+            _wanderAngle = (float)Math.Atan2(this.Velocity.Y, this.Velocity.X);
         }
         public void InvertVelocityY()
         {
@@ -90,8 +97,48 @@ namespace Ecosystem_Simulator.Entities
             newVelocity.X = this.Velocity.X;
             newVelocity.Y = -this.Velocity.Y;
             this.Velocity = newVelocity;
+            // Sync the wander angle to the new direction
+            _wanderAngle = (float)Math.Atan2(this.Velocity.Y, this.Velocity.X);
+        }
+        public void ApplyMovement(double deltaTime)
+        {
+            //  Record the position BEFORE moving
+            Vector2 oldPos = this.Position;
+            Vector2 newPos = new Vector2();
+            newPos.X = (float)(oldPos.X + (this.Velocity.X * deltaTime));
+            newPos.Y = (float)(oldPos.Y + (this.Velocity.Y * deltaTime));
+            this.Position = newPos;
         }
 
+        private void SteerTowards(Vector2 target)
+        {
+            float diffX = target.X - this.Position.X;
+            float diffY = target.Y - this.Position.Y;
+            float distance = (float)Math.Sqrt(diffX * diffX + diffY * diffY);
+
+            if (distance > 0.1f) // Avoid division by zero
+            {
+                // Normalize and scale by speed
+                float moveX = (diffX / distance) * Settings.CritterSpeed;
+                float moveY = (diffY / distance) * Settings.CritterSpeed;
+
+                this.Velocity = new Vector2(moveX, moveY);
+            }
+        }
+
+        
+
+        private void Wander(double deltaTime)
+        {
+            // Slightly change the angle every frame for a smooth "curving" motion
+            _wanderAngle += (float)(Settings.Rng.NextDouble() * 0.5 - 0.25); // Small jitter
+
+            // Move a bit slower when wondering to reduce energy consumption
+            float moveX = (float)Math.Cos(_wanderAngle) * (Settings.CritterSpeed * 0.5f);
+            float moveY = (float)Math.Sin(_wanderAngle) * (Settings.CritterSpeed * 0.5f);
+
+            this.Velocity = new Vector2(moveX, moveY);
+        }
         public void ForcePosition(Vector2 newPos) => this.Position = newPos;
     }
 }

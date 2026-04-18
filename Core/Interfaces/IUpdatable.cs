@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
-
+using Ecosystem_Simulator.Core.delegates;
 public interface IUpdatable : IEntity // For things that have logic (even static things like rotting food)
 {
-    void Update(double deltaTime, List<IEntity> nearby);
+    event SpawnRequestDelegate OnSpawnRequested; // A "Signal" sent to the World
+    void Update(double deltaTime, IEnumerable<IEntity> nearby);
 }

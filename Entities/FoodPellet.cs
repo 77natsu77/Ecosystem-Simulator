@@ -1,37 +1,52 @@
 ﻿using Ecosystem_Simulator.Core;
 using Ecosystem_Simulator.Core.Interfaces;
+using Ecosystem_Simulator.Core.delegates;
+using Ecosystem_Simulator.Environment;
 using System.Collections.Generic;
 
 namespace Ecosystem_Simulator.Entities
 {
-    public class FoodPellet : IUpdatable, IEatable, IRenderable
+    public class FoodPellet : IEatable, IUpdatable
     {
         public Vector2 Position { get; private set; }
-        public Vector2 Velocity => new Vector2(0, 0); // Food doesn't move
-        public float NutritionalValue => 20f;
         public bool IsPendingRemoval { get; private set; }
+        public float EnergyValue => 25f;
 
-        public FoodPellet(Vector2 pos)
+        private double _age = 0;
+        private const double MaxAge = 30.0; // Seconds before it rots
+        public event SpawnRequestDelegate OnSpawnRequested;
+
+        public FoodPellet(Vector2 SpawnPoint)
         {
-            Position = pos;
+            this.Position = SpawnPoint;
         }
 
-        public void Update(double deltaTime, List<IEntity> nearby) { /* Do nothing */ }
-
-        public void Consume()
+        public void Update(double deltaTime, IEnumerable<IEntity> nearby)
         {
-            // Logic to remove itself from the world
+            _age += deltaTime;
+
+            // Reproduce if old enough and not too crowded
+            if (_age > 15.0)
+            {
+                _age = 0;
+                // Simple "Seed" logic: spawn a new pellet nearby
+                int nearbyCount = 0;
+                foreach (var e in nearby) { if (e is IEatable) nearbyCount++; }
+                if (nearbyCount < 5) // Only spawn if the "neighborhood" isn't full
+                {
+                    //calculate spawn position
+                    float offsetX = (float)(Settings.Rng.NextDouble() * 40 - 20);
+                    float offsetY = (float)(Settings.Rng.NextDouble() * 40 - 20);
+
+                    Vector2 spawnPos = new Vector2(this.Position.X + offsetX, this.Position.Y + offsetY);
+
+                    // Trigger the spawn event
+                    OnSpawnRequested?.Invoke(new FoodPellet(spawnPos));
+                }
+                
+            }
         }
 
-        public void Draw() { /* Rendering logic later */ }
-
-        public void InvertVelocityX()
-        {
-
-        }
-        public void InvertVelocityY()
-        {
-
-        }
+        public void Consume() => IsPendingRemoval = true;
     }
 }

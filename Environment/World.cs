@@ -3,6 +3,7 @@
     using Ecosystem_Simulator.Core;
     using Ecosystem_Simulator.Core.Interfaces;
     using System.Collections.Generic;
+    using System.Linq;
 
     public class World
     {
@@ -12,6 +13,7 @@
         private readonly List<IUpdatable> _entities = new List<IUpdatable>();
         private readonly float _width;
         private readonly float _height;
+        private List<IUpdatable> _spawnQueue = new List<IUpdatable>();
 
         //Initializer 
         public World(float width, float height)
@@ -25,6 +27,21 @@
         {
             _entities.Add(entity);
             _grid.Register(entity);
+
+            // If the entity is capable of requesting spawns, listen to it!
+            if (entity is IUpdatable updatable)
+            {
+                // Using += "connects" the entity's event to the World's RequestSpawn method
+                updatable.OnSpawnRequested += this.RequestSpawn;
+            }
+        }
+
+        public void RequestSpawn(IEntity entity)
+        {
+            if (entity is IUpdatable updatable)
+            {
+                _spawnQueue.Add(updatable);
+            }           
         }
 
         public void Tick(double deltaTime)
@@ -34,7 +51,7 @@
                 Vector2 oldPos = entity.Position;
 
                 //  Get the neighbors from the grid
-                List<IEntity> neighbors = _grid.GetNearby(entity.Position);
+                IEnumerable<IEntity> neighbors = _grid.GetEntitiesInRadius(oldPos,Settings.CellSize);
 
                 //  Pass them to the entity 
                 entity.Update(deltaTime, neighbors);
@@ -54,6 +71,15 @@
                     _grid.Unregister(_entities[i]); // Tell grid to forget them
                     _entities.RemoveAt(i);          // Tell world to forget them
                 }
+            }
+            //Final step: process spawn queue
+            if (_spawnQueue.Count > 0)
+            {
+                foreach (var baby in _spawnQueue)
+                {
+                    Spawn(baby);
+                }
+                _spawnQueue.Clear();
             }
         }
 

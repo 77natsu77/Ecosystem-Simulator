@@ -1,8 +1,8 @@
 ﻿namespace Ecosystem_Simulator.Core.Interfaces
 {
-    public interface IEatable
+    public interface IEatable : IUpdatable
     {
-        float NutritionalValue { get; }
+        float EnergyValue { get; }
         void Consume(); // What happens when it gets eaten?
     }
 }

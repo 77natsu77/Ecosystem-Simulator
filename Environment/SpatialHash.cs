@@ -57,28 +57,32 @@ namespace Ecosystem_Simulator.Environment
             }
         }
 
-        // This is what the Critter calls to "See" nearby food
-        public List<IEntity> GetNearby(Vector2 position)
-        {
-            List<IEntity> GetNearbyList = new List<IEntity>();
-            int[] dx = { -1, 0, 1 };
-            int[] dy = { -1, 0, 1 };
 
-            foreach (int i in dx)
+        public HashSet<IEntity> GetEntitiesInRadius(Vector2 center, float radius)
+        {
+            HashSet<IEntity> results = new HashSet<IEntity>();
+
+            // How many cells does this radius span?
+            int cellRange = (int)Math.Ceiling(radius / _cellSize);
+
+            // Convert world position to grid coordinates
+            int centerIdxX = (int)(center.X / _cellSize);
+            int centerIdxY = (int)(center.Y / _cellSize);
+
+            // Loop through the box of cells covered by the radius
+            for (int x = centerIdxX - cellRange; x <= centerIdxX + cellRange; x++)
             {
-                foreach (int j in dy)
+                for (int y = centerIdxY - cellRange; y <= centerIdxY + cellRange; y++)
                 {
-                    Vector2 pos = new Vector2(position.X + i * _cellSize,position.Y + j * _cellSize);
-                    int key = GetHashKey(pos);
-                    if (_buckets.TryGetValue(key, out HashSet<IUpdatable> value))
+                    int key = GetHashKeyFromCoords(x,y);
+
+                    if (_buckets.TryGetValue(key, out var bucket))
                     {
-                        GetNearbyList.AddRange(value);
+                        results.UnionWith(bucket);
                     }
-                    
                 }
             }
-
-            return GetNearbyList;
+            return results;
         }
 
         public int GetHashKey(Vector2 position)
@@ -87,5 +91,7 @@ namespace Ecosystem_Simulator.Environment
             int y = (int)Math.Floor(position.Y / _cellSize);
             return (x * 73856093) ^ (y * 19349663);
         }
+
+        public int GetHashKeyFromCoords(int x, int y) =>  (x* 73856093) ^ (y* 19349663);
     }
 }
