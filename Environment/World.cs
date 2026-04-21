@@ -4,6 +4,7 @@
     using Ecosystem_Simulator.Core.Interfaces;
     using Ecosystem_Simulator.Core.Policies;
     using Ecosystem_Simulator.Entities;
+    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -31,6 +32,7 @@
         // We need a way to put things into the world
         public void Spawn(IUpdatable entity)
         {
+            //entity.Position = ClampToWorld(entity.Position); // Prevents spawning outside the walls
             _entities.Add(entity);
             _grid.Register(entity);
 
@@ -113,7 +115,6 @@
 
         public void Seed(int critterCount, int foodCount)
         {
-            StandardMetabolism energyPolicy = new StandardMetabolism();
 
             //  Spawn Critters
             for (int i = 0; i < critterCount; i++)
@@ -121,10 +122,10 @@
                 // Give each critter its OWN genome instance so they can mutate later
                 DefaultGenome genome = new DefaultGenome();
                 Vector2 pos = new Vector2(Settings.Rng.Next(0, (int)_width), Settings.Rng.Next(0, (int)_height));
-                Spawn(new Critter(pos, energyPolicy, genome));
+                Spawn(new Critter(pos, genome));
             }
 
-            //  Spawn Food (
+            //  Spawn Food 
             for (int j = 0; j < foodCount; j++)
             {
                 Vector2 pos = new Vector2(Settings.Rng.Next(0, (int)_width), Settings.Rng.Next(0, (int)_height));

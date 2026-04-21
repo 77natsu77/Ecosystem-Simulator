@@ -15,34 +15,18 @@ namespace Ecosystem_Simulator
         [STAThread]
         static void Main()
         {
+            World world = new World(Settings.WorldWidth, Settings.WorldHeight);
+            world.Seed(Settings.InitialCritterNumber, Settings.InitialFoodPelletNumber);
+            //SimulationEngine engine = new SimulationEngine(world);
+
+            //Set up UI
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-
-            // This is the line that actually "calls" the form into existence
-            Application.Run(new Form1());
-
+            Form1 form = new Form1(world);    
+            Application.Run(form);
         }
-        /*static void Main(string[] args)
-        {
-
-            World world = new World(Settings.WorldWidth,Settings.WorldHeight);
-
-            IEnergyPolicy standardMetabolism = new StandardMetabolism();
-            IGenome starterDNA = new DefaultGenome(); 
 
 
-            Random rng = new Random();
-            for (int i = 0; i < 10; i++)
-            {
-                Vector2 randomPos = new Vector2(rng.Next(0, 800), rng.Next(0, 600));
-                world.Spawn(new Critter(randomPos, standardMetabolism, starterDNA));
-            }
 
-            while (true)
-            {
-                world.Tick(0.016);
-                Thread.Sleep(16);
-            }
-        }*/
     }
 }

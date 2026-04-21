@@ -1,6 +1,7 @@
 ﻿using Ecosystem_Simulator.Core;
 using Ecosystem_Simulator.Core.delegates;
 using Ecosystem_Simulator.Core.Interfaces;
+using Ecosystem_Simulator.Core.Policies;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Remoting.Messaging;
@@ -15,21 +16,26 @@ namespace Ecosystem_Simulator.Entities
         public Vector2 Velocity { get; private set; }
         public float Speed { get; private set; }
         public float Energy { get; private set; }
+        public float SightRadius => _sightRadius;
         public bool IsPendingRemoval { get; private set; }
         private float _wanderAngle = 0f;
+        private float _sightRadius;
+        private float _reproductionThreshold;
+        private float _metabolismEfficiency;
         public event SpawnRequestDelegate OnSpawnRequested;
 
-        public Critter(Vector2 startPos, IEnergyPolicy policy, IGenome dna, float parentSpeed = Settings.StartingCritterSpeed)
+        public Critter(Vector2 startPos, DefaultGenome dna, float Energy = Settings.StartingEnergy)
         {
             this.Position = startPos;
-            this._metabolism = policy;
             this._dna = dna;
-            this.Energy = Settings.StartingEnergy;
+            this.Energy = Energy;
+            
+            this.Speed = dna.Speed;
+            this._sightRadius = dna.SightRadius;
+            this._metabolismEfficiency = dna.MetabolismEfficiency;
+            this._reproductionThreshold = dna.ReproductionThreshold;
 
-            // Mutation Logic: Speed can vary by +/- 10%
-            float mutationAmount = (float)(Math.Min(Settings.MaxCritterSpeed, (Settings.Rng.NextDouble() * 2 - 1) * (parentSpeed * 0.1)));
-            this.Speed = parentSpeed + mutationAmount;
-
+            this._metabolism = new StandardMetabolism(_metabolismEfficiency); // might be adjusted
             // Set initial velocity using the new unique speed
             float angle = (float)(Settings.Rng.NextDouble() * Math.PI * 2);
             this.Velocity = new Vector2((float)Math.Cos(angle) * this.Speed, (float)Math.Sin(angle) * this.Speed);
@@ -41,7 +47,7 @@ namespace Ecosystem_Simulator.Entities
             IEatable closestFood = null;
             float minDistanceSq = float.MaxValue;
             float eatDistSq = Settings.EatDistance * Settings.EatDistance;
-            float sightRadiusSq = Settings.CritterSightRadius * Settings.CritterSightRadius;
+            float sightRadiusSq = _sightRadius * _sightRadius;
 
             foreach (IEntity entity in nearbyEntities)
             {
@@ -81,15 +87,14 @@ namespace Ecosystem_Simulator.Entities
             }
 
             ApplyMovement(deltaTime);
-            this.Energy -= _metabolism.CalculateLoss(this.Velocity, deltaTime);
-            if (this.Energy >= Settings.CritterReproductionThreshold)
+            this.Energy -= _metabolism.CalculateLoss(this.Velocity,this._sightRadius, deltaTime);
+            if (this.Energy >= _reproductionThreshold)
             {
                 //  Pay the energy cost (giving half to the baby)
                 this.Energy /= 2;
 
-                //  Create the offspring (at the parent's position)
-                var baby = new Critter(this.Position, _metabolism, new DefaultGenome(), this.Speed);
-                baby.Energy = this.Energy; // Start baby with half the parent's energy
+                //  Create the offspring (at the parent's position and with their energy)
+                var baby = new Critter(this.Position, new DefaultGenome(this.Speed,this._sightRadius,this._metabolismEfficiency,this._reproductionThreshold),this.Energy);
 
                 //  Trigger spawn event
                 OnSpawnRequested?.Invoke(baby);

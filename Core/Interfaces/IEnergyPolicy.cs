@@ -2,6 +2,6 @@
 {
     public interface IEnergyPolicy
     {
-        float CalculateLoss(Vector2 velocity, double deltaTime);
+        float CalculateLoss(Vector2 velocity, float SightRadius, double deltaTime);
     }
 }

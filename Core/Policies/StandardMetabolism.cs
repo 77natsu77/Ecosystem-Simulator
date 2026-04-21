@@ -4,14 +4,19 @@ namespace Ecosystem_Simulator.Core.Policies
 {
     public class StandardMetabolism : IEnergyPolicy
     {
-        public float CalculateLoss(Vector2 velocity, double deltaTime)
+        private float _metabolismEfficiency;
+        public float CalculateLoss(Vector2 velocity, float SightRadius, double deltaTime)
         {
-            // Base cost + (v^2 * multiplier)
             // We multiply by deltaTime so the loss is "per second"
+
             float speedSquared = (velocity.X * velocity.X) + (velocity.Y * velocity.Y);
-            float totalLoss = (Settings.BaseMetabolism + (speedSquared * Settings.MovementMultiplier)) * (float)deltaTime;
+            float MovementCost = speedSquared * _metabolismEfficiency;
+            float SightCost = SightRadius * _metabolismEfficiency;
+            float totalLoss = (Settings.BaseMetabolism + MovementCost + SightCost) * (float)deltaTime;
 
             return totalLoss;
         }
+
+        public StandardMetabolism(float efficicency) => _metabolismEfficiency = efficicency;
     }
 }

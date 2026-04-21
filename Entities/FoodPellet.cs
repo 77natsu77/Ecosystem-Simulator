@@ -10,10 +10,9 @@ namespace Ecosystem_Simulator.Entities
     {
         public Vector2 Position { get; private set; }
         public bool IsPendingRemoval { get; private set; }
-        public float EnergyValue => 75f;
+        public float EnergyValue => Settings.FoodPelletEnergyValue;
 
         private double _age = 0;
-        private const double MaxAge = 30.0; // Seconds before it rots
         public event SpawnRequestDelegate OnSpawnRequested;
 
         public FoodPellet(Vector2 SpawnPoint)
@@ -29,21 +28,20 @@ namespace Ecosystem_Simulator.Entities
             if (_age > Settings.FoodPelletRateOfReproduction)
             {
                 _age = 0;
-                // Simple "Seed" logic: spawn a new pellet nearby
                 int nearbyCount = 0;
                 foreach (var e in nearby) { if (e is IEatable) nearbyCount++; }
-                if (nearbyCount < Settings.FoodPelletMaxNumberPerRegion) // Only spawn if the "neighborhood" isn't full
+
+                if (nearbyCount < Settings.FoodPelletMaxNumberPerRegion)
                 {
-                    //calculate spawn position
+                    Vector2 spawnPos = this.Position;
                     float offsetX = (float)(Settings.Rng.NextDouble() * 40 - 20);
                     float offsetY = (float)(Settings.Rng.NextDouble() * 40 - 20);
+                    spawnPos = Settings.GetLegalPosition(new Vector2(this.Position.X + offsetX, this.Position.Y + offsetY));
 
-                    Vector2 spawnPos = new Vector2(this.Position.X + offsetX, this.Position.Y + offsetY);
-
-                    // Trigger the spawn event
+                    //Trigger spawn event
                     OnSpawnRequested?.Invoke(new FoodPellet(spawnPos));
+
                 }
-                
             }
         }
 

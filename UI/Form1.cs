@@ -17,16 +17,15 @@ namespace Ecosystem_Simulator.UI
     {
         private World _world;
         private System.Windows.Forms.Timer _timer;
+        private StatsTracker _stats = new StatsTracker();
 
-        public Form1()
+        public Form1(World world)
         {
+            this._world = world;
+
             InitializeComponent();
             this.Paint += Form1_Paint; //  Register Paint Event
             this.DoubleBuffered = true; // Prevents flickering
-
-            // Initialize world
-            _world = new World(this.ClientSize.Width, this.ClientSize.Height);
-            _world.Seed(Settings.InitialCritterNumber, Settings.InitialFoodPelletNumber); 
 
             //  Setup Loop
             _timer = new System.Windows.Forms.Timer { Interval = 16 }; // ~60 FPS
@@ -56,20 +55,32 @@ namespace Ecosystem_Simulator.UI
                 {
                     float energyRatio = Math.Max(0, Math.Min(1, (float)(c.Energy / Settings.StartingEnergy)));
 
-                    // COLOR: Smooth transition from Blue (Healthy) to Red (Starving)
-                    // As energyRatio goes from 1.0 to 0.0
+                    // COLOR: Smooth transition from Blue (Healthy) to Red (Starving) as energyRatio goes from 1.0 to 0.0
                     int r = (int)((1 - energyRatio) * 255);
                     int b = (int)(energyRatio * 255);
                     int gChannel = 60; // Keep a little green for depth
 
                     Color critterColor = Color.FromArgb(r, gChannel, b);
-
+                    Color sightRadiusColor = Color.FromArgb(50, Color.Gray);
+                    float size = 3 + (energyRatio * 7);
                     using (Brush br = new SolidBrush(critterColor))
                     {
                         // SIZE: Gradual shrink from 10 pixels down to 3 pixels
-                        float size = 3 + (energyRatio * 7);
-
+                        
+                        // Draw Critter
                         g.FillEllipse(br, c.Position.X - size / 2, c.Position.Y - size / 2, size, size);
+                        
+                    }
+                    using (Brush br = new SolidBrush(sightRadiusColor))
+                    {
+                        // Diameter is the SightRadius
+                        float diameter = c.SightRadius;
+
+                        // Offset is always HALF the diameter to keep it centered
+                        float drawX = c.Position.X - (diameter / 2);
+                        float drawY = c.Position.Y - (diameter / 2);
+
+                        g.FillEllipse(br, drawX, drawY, diameter, diameter);
                     }
                 }
                 else if (entity is FoodPellet)
@@ -79,18 +90,19 @@ namespace Ecosystem_Simulator.UI
                 }
             }
 
-            //Drawing statistics
-            // 1. Calculate Stats
-            int critterCount = _world.Entities.OfType<Critter>().Count();
+            // Drawing statistics
+            List<Critter> critterList = _world.Entities.OfType<Critter>().ToList();
+            int critterCount = critterList.Count;
             int foodCount = _world.Entities.OfType<FoodPellet>().Count();
+            _stats.Update(critterList);
 
-            // 2. Format the string
             string stats = $"--- ECOSYSTEM STATS ---\n" +
                            $"Population: {critterCount}\n" +
                            $"Food Count: {foodCount}\n" +
+                           $"Average speed: {_stats.GetAverageSpeed()} \n" +
                            $"Status: {(critterCount > 0 ? "Stable" : "EXTINCT")}";
 
-            // 3. Draw it to the screen
+            //  Draw it to the screen
             using (Font font = new Font("Consolas", 12, FontStyle.Bold))
             {
                 // Draw a small background box for readability
