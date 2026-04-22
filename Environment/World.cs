@@ -15,6 +15,8 @@
         // This holds every active entity in the simulation
         private readonly List<IUpdatable> _entities = new List<IUpdatable>();
         public IEnumerable<IEntity> Entities => _entities;
+        public readonly List<Critter> _critterList;
+        public readonly List<FoodPellet> _foodPelletList;
         private readonly float _width;
         public float Width => _width;
         private readonly float _height;

@@ -15,19 +15,19 @@ namespace Ecosystem_Simulator.Core
         public void Mutate() { }
         public void Mutate(float ParentSpeed, float ParentSightRadius, float ParentMetabolismEfficiency, float ParentReproductionThreshold)
         {
-            //Mutation Logic: Each attribute can vary by +/ -10 %
+
 
             //Calculating change and adding it to parent genes
-            float newSpeed = ParentSpeed + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentSpeed * 0.1));
-            float newSightRadius = ParentSightRadius + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentSightRadius * 0.1));
-            float newMetabolismEfficiency = ParentMetabolismEfficiency + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentMetabolismEfficiency * 0.1));
-            float newReproductionThreshold = ParentReproductionThreshold + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentReproductionThreshold * 0.1));
+            float newSpeed = ParentSpeed + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentSpeed * Settings.MutationRate));
+            float newSightRadius = ParentSightRadius + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentSightRadius * Settings.MutationRate));
+            float newMetabolismEfficiency = ParentMetabolismEfficiency + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentMetabolismEfficiency * Settings.MutationRate));
+            float newReproductionThreshold = ParentReproductionThreshold + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentReproductionThreshold * Settings.MutationRate));
 
             //clamping to max values
-            this.Speed = Math.Max(20f,Math.Min(Settings.MaxCritterSpeed, newSpeed));
-            this.SightRadius = Math.Max(10f,Math.Min(Settings.MaxCritterSightradius, newSightRadius));
-            this.MetabolismEfficiency = Math.Max(0.0001f,Math.Min(Settings.MaxCritterMetabolismEfficiency, newMetabolismEfficiency));
-            this.ReproductionThreshold = Math.Max(0,Math.Min(Settings.MaxCritterReproductionThreshold, newReproductionThreshold));
+            this.Speed = Math.Max(Settings.MinCritterSpeed,Math.Min(Settings.MaxCritterSpeed, newSpeed));
+            this.SightRadius = Math.Max(Settings.MinCritterSightradius,Math.Min(Settings.MaxCritterSightradius, newSightRadius));
+            this.MetabolismEfficiency = Math.Max(Settings.MinCritterMetabolismEfficiency,Math.Min(Settings.MaxCritterMetabolismEfficiency, newMetabolismEfficiency));
+            this.ReproductionThreshold = Math.Max(Settings.MinCritterReproductionThreshold,Math.Min(Settings.MaxCritterReproductionThreshold, newReproductionThreshold));
         }
 
         public DefaultGenome(float ParentSpeed, float ParentSightRadius, float ParentMetabolismEfficiency, float ParentReproductionThreshold)

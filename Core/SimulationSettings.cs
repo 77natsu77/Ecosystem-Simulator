@@ -18,26 +18,34 @@ namespace Ecosystem_Simulator.Core
         public const float StartingEnergy = 2000f;
         public const float EatDistance = 10f;
         public const float BaseMetabolism = 1.0f;
+        public const float MutationRate = 0.1; // 10%
         //public const float MovementMultiplier = 0.005f; //rate of metabolism goes up when moving
 
         // Initialization settings
         public const int InitialCritterNumber = 50;
         public const int InitialFoodPelletNumber = 200;
 
-        //Entities Settings
+        //ENTITIES SETTINGS
         //Critters
+        //Starting values
         public const float StartingCritterSightRadius = 60f;
         public const float StartingCritterSpeed = 150f;
         public const float StartingCritterMetabolismEfficiency = 0.0035f; // might need to adjust this later
         public const float StartingCritterReproductionThreshold = StartingEnergy * 1.3f;
+        //Max values
         public const float MaxCritterSpeed = StartingCritterSpeed * 2;
         public const float MaxCritterSightradius = StartingCritterSightRadius * 2;
         public const float MaxCritterMetabolismEfficiency = StartingCritterMetabolismEfficiency / 2; // might need to adjust this later
         public const float MaxCritterReproductionThreshold = StartingCritterReproductionThreshold / 2; //might need to adjust this later
+        //Min values
+        public const float MinCritterSpeed = StartingCritterSpeed / 2;
+        public const float MinCritterSightradius = StartingCritterSightRadius / 2;
+        public const float MinCritterMetabolismEfficiency = StartingCritterMetabolismEfficiency * 2; // might need to adjust this later
+        public const float MinCritterReproductionThreshold = StartingCritterReproductionThreshold * 2; //might need to adjust this later
 
 
 
-        //FoodPellet
+        //FoodPellet settings
         public const float FoodPelletRateOfReproduction = 8.5f; // seconds
         public const int FoodPelletMaxNumberPerRegion = 20; // if the number of pellets around it exceeds this number, no more reproduction will occur
         public const float FoodPelletEnergyValue = 100f;
