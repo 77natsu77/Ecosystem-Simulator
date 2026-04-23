@@ -13,12 +13,26 @@ namespace Ecosystem_Simulator.Core
 
         // Grid Settings
         public const float CellSize = 100;
+        //Save files
+        public const string WorldSaveFile = "../Exports/WorldData.json"; //TODO CREATE A FUNCTION GOING THROUGH EACH OF THESE FILES AND ENSURING THEY EXIST, RATHER THAN DOING IT IN STATS MANAGER
+        public const string StatsFilePath = "../Exports/stats.csv";
+        public const string PopulationHTMLFile = "../Exports/population_over_time.html"; //TODO: MAKE THE FILES ACTUALLY APPEAR IN THE EXPORTS FOLDER
+        public const string CritterDataHTMLFile = "../Exports/critter_data_over_time.html";
+        //TODO ADD THE COLORS USED TO REPRESENT DATA TO SETTINGS FILE
+        //Save settings
+        public const int StatsSaveRate = 3; // seconds
+        //UI SETTINGS
+        public const double TickRate = 0.0166666666666667; //around 60 FPS
 
         // Simulation Balance
         public const float StartingEnergy = 2000f;
         public const float EatDistance = 10f;
         public const float BaseMetabolism = 1.0f;
+<<<<<<< HEAD
         public const float MutationRate = 0.1; // 10%
+=======
+        public const float MutationRate = 3f; // %, might need to make different mutation rates for different entities when the time comes
+>>>>>>> 1c9d56c (Worked on visualizing statistics and drafting plans for final version)
         //public const float MovementMultiplier = 0.005f; //rate of metabolism goes up when moving
 
         // Initialization settings
@@ -31,7 +45,11 @@ namespace Ecosystem_Simulator.Core
         public const float StartingCritterSightRadius = 60f;
         public const float StartingCritterSpeed = 150f;
         public const float StartingCritterMetabolismEfficiency = 0.0035f; // might need to adjust this later
+<<<<<<< HEAD
         public const float StartingCritterReproductionThreshold = StartingEnergy * 1.3f;
+=======
+        public const float StartingCritterReproductionThreshold = StartingEnergy * 1.2f;
+>>>>>>> 1c9d56c (Worked on visualizing statistics and drafting plans for final version)
         //Max values
         public const float MaxCritterSpeed = StartingCritterSpeed * 2;
         public const float MaxCritterSightradius = StartingCritterSightRadius * 2;
@@ -42,6 +60,11 @@ namespace Ecosystem_Simulator.Core
         public const float MinCritterSightradius = StartingCritterSightRadius / 2;
         public const float MinCritterMetabolismEfficiency = StartingCritterMetabolismEfficiency * 2; // might need to adjust this later
         public const float MinCritterReproductionThreshold = StartingCritterReproductionThreshold * 2; //might need to adjust this later
+<<<<<<< HEAD
+=======
+        //Other criiter settings
+        public const float CritterBirthEnergyShareRatio = 0.15f; //A critter share this percentage of energy with its baby when giving birth
+>>>>>>> 1c9d56c (Worked on visualizing statistics and drafting plans for final version)
 
 
 

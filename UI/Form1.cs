@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -17,8 +18,10 @@ namespace Ecosystem_Simulator.UI
     {
         private World _world;
         private System.Windows.Forms.Timer _timer;
-        private StatsTracker _stats = new StatsTracker();
-
+        private List<StatsEntry> _historyList = new List<StatsEntry>();
+        StatisticsManager _stats_manager = new StatisticsManager();
+        private double _internalTimestamp = 0;
+        private float secondsElasped = 0;
         public Form1(World world)
         {
             this._world = world;
@@ -28,9 +31,9 @@ namespace Ecosystem_Simulator.UI
             this.DoubleBuffered = true; // Prevents flickering
 
             //  Setup Loop
-            _timer = new System.Windows.Forms.Timer { Interval = 16 }; // ~60 FPS
+            _timer = new System.Windows.Forms.Timer { Interval = (int)(Settings.TickRate * 1000) }; // ~60 FPS
             _timer.Tick += (s, e) => {
-                _world.Tick(0.016); // Logic Step
+                _world.Tick(Settings.TickRate); // Logic Step
                 this.Invalidate();  // Trigger Paint
             };
             _timer.Start();
@@ -90,26 +93,78 @@ namespace Ecosystem_Simulator.UI
                 }
             }
 
-            // Drawing statistics
-            List<Critter> critterList = _world.Entities.OfType<Critter>().ToList();
-            int critterCount = critterList.Count;
-            int foodCount = _world.Entities.OfType<FoodPellet>().Count();
-            _stats.Update(critterList);
+            // Obtaining and Drawing statistics
+            int critterCount = 0;
+            int foodCount = 0;
+            float sumEnergy = 0, sumSpeed = 0, sumSight = 0, sumMetab = 0, sumRepro = 0;
+            foreach (var entity in _world.Entities) //ONE loop to obtain all data
+            {
+                if (entity is Critter c)
+                {
+                    critterCount++;
+                    sumEnergy += c.Energy;
+                    sumSpeed += c.Speed;
+                    sumSight += c.SightRadius;
+                    sumMetab += c.MetabolismEfficiency;
+                    sumRepro += c.ReproductionThreshold;
+                }
+                else if (entity is FoodPellet)
+                {
+                    foodCount++;
+                }
+            }
+            float AverageEnergy = critterCount > 0 ? sumEnergy / critterCount : 0;
+            float AverageSpeed = critterCount > 0 ? sumSpeed / critterCount : 0;
+            float AverageSightRadius = critterCount > 0 ? sumSight / critterCount : 0;
+            float AverageMetabolismEfficiency = critterCount > 0 ? sumMetab / critterCount : 0;
+            float AverageReproductionThreshold = critterCount > 0 ? sumRepro / critterCount : 0;
+            //TODO: GET RID OF DECIMALS APPEARING IN HTML FILES (THINKING OF A SECONDS ELASPED SYSTEM USING THE NO OF FRAMES AND MOD 60,NEED A WAY TO CONVERT fps TO SECONDS AS WELL IN SETTINGS)
+            double lastLogTime = _historyList.Count > 0 ? _historyList.Last().Timestamp : -30; // -30 ensures it logs on frame 1
+            _internalTimestamp +=Settings.TickRate;
+            
+            if (_internalTimestamp - lastLogTime >= Settings.StatsSaveRate)
+            {
+                secondsElasped += Settings.StatsSaveRate; //trying this instead so the html files look cleaner
+                StatsEntry history = new StatsEntry
+                {
+                    Timestamp = secondsElasped,
+                    CritterCount = critterCount,
+                    FoodCount = foodCount,
+                    AvgSight = AverageSightRadius,
+                    AvgEnergy = AverageEnergy,
+                    AvgSpeed = AverageSpeed,
+                    AvgMetabolismEfficiency = AverageMetabolismEfficiency,
+                    AvgReproductionThreshold = AverageReproductionThreshold
+                };
 
+                _historyList.Add(history);
+                _stats_manager.SaveStatsToCSV(_historyList);
+                _stats_manager.ExportToHTML(_historyList);
+            }
+
+            
+            
             string stats = $"--- ECOSYSTEM STATS ---\n" +
                            $"Population: {critterCount}\n" +
                            $"Food Count: {foodCount}\n" +
-                           $"Average speed: {_stats.GetAverageSpeed()} \n" +
+                           $"Average speed: {AverageSpeed} \n" +
+                           $"Average energy: {AverageEnergy:N2} \n" +
+                           $"Average sight radius: {AverageSightRadius} \n" +
+                           $"Average metabolism efficiency: {AverageMetabolismEfficiency:N5} \n" +
+                           $"Average reproduction theshold: {AverageReproductionThreshold:N0} \n" +
                            $"Status: {(critterCount > 0 ? "Stable" : "EXTINCT")}";
 
             //  Draw it to the screen
             using (Font font = new Font("Consolas", 12, FontStyle.Bold))
             {
                 // Draw a small background box for readability
-                g.FillRectangle(new SolidBrush(Color.FromArgb(150, 0, 0, 0)), 10, 10, 220, 80);
+                g.FillRectangle(new SolidBrush(Color.FromArgb(150, 0, 0, 0)), 10, 10, 370, 200);
                 // Draw the text
                 g.DrawString(stats, font, Brushes.White, 15, 15);
             }
+
+            
+                
         }
     }
 }

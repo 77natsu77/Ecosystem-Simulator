@@ -51,7 +51,7 @@
             if (entity is IUpdatable updatable)
             {
                 _spawnQueue.Add(updatable);
-            }           
+            }
         }
 
         public void Tick(double deltaTime)
@@ -61,7 +61,7 @@
                 Vector2 oldPos = entity.Position;
 
                 //  Get the neighbors from the grid
-                IEnumerable<IEntity> neighbors = _grid.GetEntitiesInRadius(oldPos,Settings.CellSize);
+                IEnumerable<IEntity> neighbors = _grid.GetEntitiesInRadius(oldPos, Settings.CellSize);
 
                 //  Pass them to the entity 
                 entity.Update(deltaTime, neighbors);

@@ -15,10 +15,10 @@ namespace Ecosystem_Simulator.Environment
         // Adds an entity to the grid for the first time
         public void Register(IUpdatable entity)
         {
-            
+
             int key = GetHashKey(entity.Position);
-            if (!_buckets.TryGetValue(key, out HashSet< IUpdatable > bucket))
-             {
+            if (!_buckets.TryGetValue(key, out HashSet<IUpdatable> bucket))
+            {
                 _buckets.Add(key, new HashSet<IUpdatable> { entity });
             }
             else
@@ -74,7 +74,7 @@ namespace Ecosystem_Simulator.Environment
             {
                 for (int y = centerIdxY - cellRange; y <= centerIdxY + cellRange; y++)
                 {
-                    int key = GetHashKeyFromCoords(x,y);
+                    int key = GetHashKeyFromCoords(x, y);
 
                     if (_buckets.TryGetValue(key, out var bucket))
                     {
@@ -92,6 +92,6 @@ namespace Ecosystem_Simulator.Environment
             return (x * 73856093) ^ (y * 19349663);
         }
 
-        public int GetHashKeyFromCoords(int x, int y) =>  (x* 73856093) ^ (y* 19349663);
+        public int GetHashKeyFromCoords(int x, int y) => (x * 73856093) ^ (y * 19349663);
     }
 }
