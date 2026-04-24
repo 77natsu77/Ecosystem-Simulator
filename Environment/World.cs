@@ -13,6 +13,7 @@
         private readonly SpatialHash _grid = new SpatialHash();
 
         // This holds every active entity in the simulation
+        // might make it public with get and private set, along with width and height
         private readonly List<IUpdatable> _entities = new List<IUpdatable>();
         public IEnumerable<IEntity> Entities => _entities;
         public readonly List<Critter> _critterList;
@@ -31,10 +32,10 @@
         }
 
 
-        // We need a way to put things into the world
+        // Event to put things into the world
         public void Spawn(IUpdatable entity)
         {
-            //entity.Position = ClampToWorld(entity.Position); // Prevents spawning outside the walls
+            entity.Position = ClampToWorld(entity.Position); // Prevents spawning outside the walls
             _entities.Add(entity);
             _grid.Register(entity);
 
@@ -58,6 +59,7 @@
         {
             foreach (IUpdatable entity in _entities)
             {
+                // Save old position before update for spatial hash update later
                 Vector2 oldPos = entity.Position;
 
                 //  Get the neighbors from the grid
@@ -115,18 +117,24 @@
             }
         }
 
-        public void Seed(int critterCount, int foodCount)
+        public void Seed(int critterCount, int predatorCount, int foodCount)
         {
 
             //  Spawn Critters
             for (int i = 0; i < critterCount; i++)
             {
                 // Give each critter its OWN genome instance so they can mutate later
-                DefaultGenome genome = new DefaultGenome();
+                CritterGenome genome = new CritterGenome();
                 Vector2 pos = new Vector2(Settings.Rng.Next(0, (int)_width), Settings.Rng.Next(0, (int)_height));
                 Spawn(new Critter(pos, genome));
             }
-
+            // Spawn Predators
+            for (int k = 0; k < predatorCount; k++)
+            {
+                PredatorGenome genome = new PredatorGenome();
+                Vector2 pos = new Vector2(Settings.Rng.Next(0, (int)_width), Settings.Rng.Next(0, (int)_height));
+                Spawn(new Predator(pos, genome));
+            }
             //  Spawn Food 
             for (int j = 0; j < foodCount; j++)
             {

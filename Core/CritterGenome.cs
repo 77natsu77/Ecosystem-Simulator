@@ -2,7 +2,7 @@
 using System;
 namespace Ecosystem_Simulator.Core
 {
-    public class DefaultGenome : IGenome
+    public class CritterGenome : IGenome
     {
         public float Speed { get; private set; }
         public float SightRadius { get; private set; }
@@ -16,12 +16,12 @@ namespace Ecosystem_Simulator.Core
         public void Mutate(float ParentSpeed, float ParentSightRadius, float ParentMetabolismEfficiency, float ParentReproductionThreshold)
         {
 
-
+            
             //Calculating change and adding it to parent genes
-            float newSpeed = ParentSpeed + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentSpeed * Settings.MutationRate));
-            float newSightRadius = ParentSightRadius + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentSightRadius * Settings.MutationRate));
-            float newMetabolismEfficiency = ParentMetabolismEfficiency + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentMetabolismEfficiency * Settings.MutationRate));
-            float newReproductionThreshold = ParentReproductionThreshold + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentReproductionThreshold * Settings.MutationRate));
+            float newSpeed = ParentSpeed + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentSpeed * Settings.CritterMutationRate));
+            float newSightRadius = ParentSightRadius + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentSightRadius * Settings.CritterMutationRate));
+            float newMetabolismEfficiency = ParentMetabolismEfficiency + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentMetabolismEfficiency * Settings.CritterMutationRate));
+            float newReproductionThreshold = ParentReproductionThreshold + (float)((Settings.Rng.NextDouble() * 2 - 1) * (ParentReproductionThreshold * Settings.CritterMutationRate));
 
             //clamping to max values
             this.Speed = Math.Max(Settings.MinCritterSpeed,Math.Min(Settings.MaxCritterSpeed, newSpeed));
@@ -30,7 +30,7 @@ namespace Ecosystem_Simulator.Core
             this.ReproductionThreshold = Math.Max(Settings.MinCritterReproductionThreshold,Math.Min(Settings.MaxCritterReproductionThreshold, newReproductionThreshold));
         }
 
-        public DefaultGenome(float Speed, float SightRadius, float MetabolismEfficiency, float ReproductionThreshold, bool newBorn = true)
+        public CritterGenome(float Speed, float SightRadius, float MetabolismEfficiency, float ReproductionThreshold, bool newBorn = false)
         {
             if (newBorn)
             {
@@ -46,7 +46,7 @@ namespace Ecosystem_Simulator.Core
             
         }
 
-        public DefaultGenome()
+        public CritterGenome()
         {
             Speed = Settings.StartingCritterSpeed;
             SightRadius = Settings.StartingCritterSightRadius;

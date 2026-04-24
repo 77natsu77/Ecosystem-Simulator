@@ -11,11 +11,6 @@ public class StatisticsManager
 {
     public void SaveStatsToCSV(List<StatsEntry> statsHistory)
     {
-        string directory = Path.GetDirectoryName(Settings.StatsFilePath);
-        if (!Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
         StringBuilder sb = new StringBuilder();
         sb.AppendLine("Timestamp,CritterCount,FoodCount,AvgSight,AvgEnergy,AvgSpeed");
         foreach (var entry in statsHistory)
@@ -58,11 +53,6 @@ public class StatisticsManager
 
     public void SaveWorldManual(World world)//json doesnt work on version 4.7.2, only 5 and above (I think)
     {
-        string directory = Path.GetDirectoryName(Settings.WorldSaveFile);
-        if (!Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
         var data = new SaveData(world);
         StringBuilder sb = new StringBuilder();
         sb.AppendLine("{"); // Open file
@@ -122,16 +112,6 @@ public class StatisticsManager
 
     public void ExportToHTML(List<StatsEntry> statsHistory)//chose to do this as html, wanted python but school pc prevented me from using pandas and matlib
     {
-        string directory = Path.GetDirectoryName(Settings.PopulationHTMLFile);
-        if (!Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-        string directory2 = Path.GetDirectoryName(Settings.CritterDataHTMLFile);
-        if (!Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
         // Convert  list of data into Javascript-friendly strings
         string labels = string.Join(",", statsHistory.Select(s => $"'{s.Timestamp}s'"));
         string critterCount = string.Join(",", statsHistory.Select(s => s.CritterCount));
@@ -141,9 +121,19 @@ public class StatisticsManager
         string energyData = string.Join(",", statsHistory.Select(s => s.AvgEnergy));
         string metabolism_efficiencyData = string.Join(",", statsHistory.Select(s => s.AvgMetabolismEfficiency));
         string reproduction_thresholdData = string.Join(",", statsHistory.Select(s => s.AvgReproductionThreshold));
+
+        // Little addition, change background color if extinction occurs, just to make it more visually striking, also makes it easier to see the graphs if there are only a few critters left at the end
         bool isExtinct = statsHistory.Last().CritterCount == 0;
         string bgColor = isExtinct ? "#440000" : "#ffffff";
-        //TODO: ADD THE BORDER COLOR TO SETTINGS SO THE PROJECT IS MORE CENTRALISED
+
+        // Load colors from settings
+        string critterPopulationColor = Settings.CritterPopulationColor;
+        string foodPelletPopulationColor = Settings.FoodPelletPopulationColor;
+        string speedColor = Settings.SpeedColor;
+        string sightRadiusColor = Settings.SightRadiusColor;
+        string energyColor = Settings.EnergyColor;
+        string metabolismEfficiencyColor = Settings.MetabolismEfficiencyColor;
+        string reproductionThresholdColor = Settings.ReproductionThresholdColor;
         string population_htmlTemplate = $@"
     <html>
     <head>
@@ -162,11 +152,11 @@ public class StatisticsManager
                     datasets: [{{
                         label: 'Critters',
                         data: [{critterCount}],
-                        borderColor: 'rgb(75, 192, 192)',
+                        borderColor: {critterPopulationColor},
                     }}, {{
                         label: 'Food',
                         data: [{foodCount}],
-                        borderColor: 'rgb(255, 99, 132)',
+                        borderColor: {foodPelletPopulationColor},
                     }}]
                 }}
             }});
@@ -175,6 +165,7 @@ public class StatisticsManager
     </html>";
 
         File.WriteAllText(Settings.PopulationHTMLFile, population_htmlTemplate);
+        
     string critterData_htmlTemplate = $@"
     <html>
     <head>
@@ -193,23 +184,23 @@ public class StatisticsManager
                     datasets: [{{
                         label: 'Speed',
                         data: [{speedData}],
-                        borderColor: 'rgb(75, 192, 192)',
+                        borderColor: {speedColor},
                     }}, {{
-                        label: 'Sight Raduis',
+                        label: 'Sight Radius',
                         data: [{sight_radiusData}],
-                        borderColor: 'rgb(255, 99, 132)',
+                        borderColor: {sightRadiusColor},
                     }}, {{
                         label: 'Energy',
                         data: [{energyData}],
-                        borderColor: 'rgb(255, 215, 0)',
+                        borderColor: {energyColor},
                     }}, {{
                         label: 'Metabolism Efficiency',
                         data: [{metabolism_efficiencyData}],
-                        borderColor: 'rgb(192, 192, 192)',
+                        borderColor: {metabolismEfficiencyColor},
                     }}, {{
                         label: 'Reproduction Threshold',
                         data: [{reproduction_thresholdData}],
-                        borderColor: 'rgb(205, 127, 50)',
+                        borderColor: {reproductionThresholdColor},
                         }}]
                 }}
             }});

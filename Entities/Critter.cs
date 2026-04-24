@@ -27,7 +27,7 @@ namespace Ecosystem_Simulator.Entities
 
         public event SpawnRequestDelegate OnSpawnRequested;
 
-        public Critter(Vector2 startPos, DefaultGenome dna, float Energy = Settings.StartingEnergy)
+        public Critter(Vector2 startPos, CritterGenome dna, float Energy = Settings.CritterStartingEnergy)
         {
             this.Position = startPos;
             this._dna = dna;
@@ -38,7 +38,7 @@ namespace Ecosystem_Simulator.Entities
             this.MetabolismEfficiency = dna.MetabolismEfficiency;
             this.ReproductionThreshold = dna.ReproductionThreshold;
 
-            this._metabolism = new StandardMetabolism(MetabolismEfficiency); // might be adjusted
+            this._metabolism = new StandardMetabolism(MetabolismEfficiency); 
 
             // Set initial velocity using the new unique speed
             float angle = (float)(Settings.Rng.NextDouble() * Math.PI * 2);
@@ -53,23 +53,24 @@ namespace Ecosystem_Simulator.Entities
             float eatDistSq = Settings.EatDistance * Settings.EatDistance;
             float sightRadiusSq = SightRadius * SightRadius;
 
-            foreach (IEntity entity in nearbyEntities)
+            foreach (IEntity entity in nearbyEntities) // Detect stimuli and provide suitable response
             {
                 if (entity is IEatable food && !food.IsPendingRemoval)
                 {
                     float dX = entity.Position.X - this.Position.X;
                     float dY = entity.Position.Y - this.Position.Y;
                     float distSq = (dX * dX) + (dY * dY);
+                    // Very complex logic incoming, brace yourself
                     // ACTION 1: EATING
                     if (distSq < eatDistSq)
                     {
                         this.Energy += food.EnergyValue;
                         food.Consume();
-                        continue; // Move to next entity, this one is gone!
+                        continue; // Move to next entity, this one is gone
                     }
 
                     // ACTION 2: SENSING FOOD (Only if hungry)
-                    if (this.Energy < (Settings.StartingEnergy * 0.8f)) //less than 80% energy
+                    if (this.Energy < Settings.CritterHungerEnergy) 
                     {
                         if (distSq < sightRadiusSq && distSq < minDistanceSq)
                         {
@@ -92,18 +93,10 @@ namespace Ecosystem_Simulator.Entities
 
             ApplyMovement(deltaTime);
             this.Energy -= _metabolism.CalculateLoss(this.Velocity,this.SightRadius, deltaTime);
-            if (this.Energy >= ReproductionThreshold) //TODO: MAKE DIVING BIRTH A FUNCTION???, MAKE IT SO THE PARENT RETAIN 65% OF ENERGY AND THE CHILD 45% SO THE BIRTH RATE INCREASES
-            { //TODO MAKE THIS SHARE TRANSFER A SINGLE VARIABLE IN SETTINGS
-                //  Pay the energy cost (giving half to the baby)
-                float baby_energy = this.Energy * Settings.CritterBirthEnergyShareRatio;
-                this.Energy -= baby_energy; //check if multiple by 1-ratio is faster, need to make things more efficienct for heavier tests
-                
 
-                //  Create the offspring (at the parent's position and with their energy)
-                var baby = new Critter(this.Position, new DefaultGenome(this.Speed,this.SightRadius,this.MetabolismEfficiency,this.ReproductionThreshold),baby_energy );
-
-                //  Trigger spawn event
-                OnSpawnRequested?.Invoke(baby);
+            if (this.Energy >= ReproductionThreshold) 
+            { 
+                SpawnChild();
             }
 
             if (this.Energy <= 0)
@@ -114,6 +107,20 @@ namespace Ecosystem_Simulator.Entities
 
            
         }
+
+        public void SpawnChild()
+        {
+            float baby_energy = this.Energy * Settings.CritterBirthEnergyShareRatio;
+            this.Energy -= baby_energy; //check if multiplying by 1-ratio is faster, need to make things more efficienct for heavier tests
+            
+            // Create new critter at parent position
+            Critter baby = new Critter(this.Position, new DefaultGenome(this.Speed,this.SightRadius,this.MetabolismEfficiency,this.ReproductionThreshold,true),baby_energy );
+
+            //  Trigger spawn event
+            OnSpawnRequested?.Invoke(baby);
+        }
+
+
 
         public float CalculateDistance(Vector2 A, Vector2 B)
         {
@@ -172,8 +179,8 @@ namespace Ecosystem_Simulator.Entities
             _wanderAngle += (float)(Settings.Rng.NextDouble() * 0.5 - 0.25); // Small jitter
 
             // Move a bit slower when wondering to reduce energy consumption
-            float moveX = (float)Math.Cos(_wanderAngle) * (this.Speed * 0.5f);
-            float moveY = (float)Math.Sin(_wanderAngle) * (this.Speed * 0.5f);
+            float moveX = (float)Math.Cos(_wanderAngle) * (this.Speed * Settings.CritterSpeedRatioWhenNotHungry);
+            float moveY = (float)Math.Sin(_wanderAngle) * (this.Speed * Settings.CritterSpeedRatioWhenNotHungry);
 
             this.Velocity = new Vector2(moveX, moveY);
         }

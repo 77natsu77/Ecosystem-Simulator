@@ -89,9 +89,9 @@ namespace Ecosystem_Simulator.Environment
         {
             int x = (int)Math.Floor(position.X / _cellSize);
             int y = (int)Math.Floor(position.Y / _cellSize);
-            return (x * 73856093) ^ (y * 19349663);
+            return (x * Settings.HashConstantX) ^ (y * Settings.HashConstantY);
         }
 
-        public int GetHashKeyFromCoords(int x, int y) => (x * 73856093) ^ (y * 19349663);
+        public int GetHashKeyFromCoords(int x, int y) => (x * Settings.HashConstantX) ^ (y * Settings.HashConstantY);
     }
 }

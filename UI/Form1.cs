@@ -41,6 +41,7 @@ namespace Ecosystem_Simulator.UI
 
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
+            // Setting up graphics
             System.Diagnostics.Debug.WriteLine($"Drawing {_world.Entities.Count()} entities");
             Graphics g = e.Graphics;
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
@@ -56,7 +57,7 @@ namespace Ecosystem_Simulator.UI
             {
                 if (entity is Critter c)
                 {
-                    float energyRatio = Math.Max(0, Math.Min(1, (float)(c.Energy / Settings.StartingEnergy)));
+                    float energyRatio = Math.Max(0, Math.Min(1, (float)(c.Energy / Settings.CritterStartingEnergy)));
 
                     // COLOR: Smooth transition from Blue (Healthy) to Red (Starving) as energyRatio goes from 1.0 to 0.0
                     int r = (int)((1 - energyRatio) * 255);
@@ -68,7 +69,7 @@ namespace Ecosystem_Simulator.UI
                     float size = 3 + (energyRatio * 7);
                     using (Brush br = new SolidBrush(critterColor))
                     {
-                        // SIZE: Gradual shrink from 10 pixels down to 3 pixels
+                        // SIZE: Gradual shrink from 10 pixels down to 3 pixels,might change these values in settings later
                         
                         // Draw Critter
                         g.FillEllipse(br, c.Position.X - size / 2, c.Position.Y - size / 2, size, size);
@@ -83,8 +84,41 @@ namespace Ecosystem_Simulator.UI
                         float drawX = c.Position.X - (diameter / 2);
                         float drawY = c.Position.Y - (diameter / 2);
 
-                        g.FillEllipse(br, drawX, drawY, diameter, diameter);
+                        g.FillEllipse(br, drawX, drawY, diameter, diameter); // need to fix visual bug
                     }
+                }
+                else if (entity is Predator p)
+                {
+                    float energyRatio = Math.Max(0, Math.Min(1, (float)(p.Energy / Settings.PredatorStartingEnergy)));
+
+                    // COLOR: Smooth transition from Blue (Healthy) to Red (Starving) as energyRatio goes from 1.0 to 0.0
+                    int r = (int)((1 - energyRatio) * 255);
+                    int b = (int)(energyRatio * 255);
+                    int gChannel = 150; // Keep a little green for depth
+
+                    Color predatorColor = Color.FromArgb(r, gChannel, b);
+                    Color sightRadiusColor = Color.FromArgb(50, Color.Gray);
+                    float size = 3 + (energyRatio * 7);
+                    using (Brush br = new SolidBrush(predatorColor))
+                    {
+                        // SIZE: Gradual shrink from 10 pixels down to 3 pixels,might change these values in settings later
+                        
+                        // Draw Critter
+                        g.FillEllipse(br, p.Position.X - size / 2, p.Position.Y - size / 2, size, size);
+                        
+                    }
+                    using (Brush br = new SolidBrush(sightRadiusColor))
+                    {
+                        // Diameter is the SightRadius
+                        float diameter = p.SightRadius;
+
+                        // Offset is always HALF the diameter to keep it centered
+                        float drawX = p.Position.X - (diameter / 2);
+                        float drawY = p.Position.Y - (diameter / 2);
+
+                        g.FillEllipse(br, drawX, drawY, diameter, diameter); // need to fix visual bug
+                    }
+                
                 }
                 else if (entity is FoodPellet)
                 {
@@ -96,7 +130,9 @@ namespace Ecosystem_Simulator.UI
             // Obtaining and Drawing statistics
             int critterCount = 0;
             int foodCount = 0;
+            int predatorCount = 0;
             float sumEnergy = 0, sumSpeed = 0, sumSight = 0, sumMetab = 0, sumRepro = 0;
+            // TODO: adjust stats to includen predator information
             foreach (var entity in _world.Entities) //ONE loop to obtain all data
             {
                 if (entity is Critter c)
@@ -118,13 +154,13 @@ namespace Ecosystem_Simulator.UI
             float AverageSightRadius = critterCount > 0 ? sumSight / critterCount : 0;
             float AverageMetabolismEfficiency = critterCount > 0 ? sumMetab / critterCount : 0;
             float AverageReproductionThreshold = critterCount > 0 ? sumRepro / critterCount : 0;
-            //TODO: GET RID OF DECIMALS APPEARING IN HTML FILES (THINKING OF A SECONDS ELASPED SYSTEM USING THE NO OF FRAMES AND MOD 60,NEED A WAY TO CONVERT fps TO SECONDS AS WELL IN SETTINGS)
+            
             double lastLogTime = _historyList.Count > 0 ? _historyList.Last().Timestamp : -30; // -30 ensures it logs on frame 1
             _internalTimestamp +=Settings.TickRate;
             
             if (_internalTimestamp - lastLogTime >= Settings.StatsSaveRate)
             {
-                secondsElasped += Settings.StatsSaveRate; //trying this instead so the html files look cleaner
+                secondsElasped += Settings.StatsSaveRate; // ensures timestamps saved are precise and consistent
                 StatsEntry history = new StatsEntry
                 {
                     Timestamp = secondsElasped,

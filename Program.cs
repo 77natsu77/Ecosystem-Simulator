@@ -6,6 +6,7 @@ using Ecosystem_Simulator.Environment;
 using Ecosystem_Simulator.UI;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -16,8 +17,9 @@ namespace Ecosystem_Simulator
         [STAThread]
         static void Main()
         {
+            Settings.EnsureFilesExist();
             World world = new World(Settings.WorldWidth, Settings.WorldHeight);
-            world.Seed(Settings.InitialCritterNumber, Settings.InitialFoodPelletNumber);
+            world.Seed(Settings.InitialCritterNumber, Settings.InitialPredatorNumber , Settings.InitialFoodPelletNumber);
             //SimulationEngine engine = new SimulationEngine(world);
 
             //Set up UI

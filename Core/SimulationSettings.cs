@@ -7,43 +7,67 @@ namespace Ecosystem_Simulator.Core
         // RNG
         public static readonly Random Rng = new Random();
 
-        // World Dimensions
+        // WORLD SETTINGS
         public const float WorldWidth = 1200f;
         public const float WorldHeight = 800f;
 
-        // Grid Settings
-        public const float CellSize = 100;
-        //Save files
-        public const string WorldSaveFile = "../Exports/WorldData.json"; //TODO CREATE A FUNCTION GOING THROUGH EACH OF THESE FILES AND ENSURING THEY EXIST, RATHER THAN DOING IT IN STATS MANAGER
+        // GRID SETTINGS
+        public const float CellSize = 100f;
+        // Large prime numbers for hashing
+        public const int HashConstantX = 73856093; 
+        public const int HashConstantY = 19349663; 
+        
+        // SAVE SETTINGS
+        // file(s) settings
+        public const string WorldSaveFile = "../Exports/WorldData.json"; 
         public const string StatsFilePath = "../Exports/stats.csv";
-        public const string PopulationHTMLFile = "../Exports/population_over_time.html"; //TODO: MAKE THE FILES ACTUALLY APPEAR IN THE EXPORTS FOLDER
+        public const string PopulationHTMLFile = "../Exports/population_over_time.html"; 
         public const string CritterDataHTMLFile = "../Exports/critter_data_over_time.html";
-        //TODO ADD THE COLORS USED TO REPRESENT DATA TO SETTINGS FILE
-        //Save settings
+  
+        // colors for html files
+        public const string SpeedColor = "#FF5733"; // Red-Orange
+        public const string SightRadiusColor = "#33C1FF"; // Light Blue
+        public const string MetabolismEfficiencyColor = "#75FF33"; // Light Green
+        public const string ReproductionThresholdColor = "#FF33A8"; // Pink
+        public const string EnergyColor = "#FFD700"; // Gold
+        public const string CritterPopulationColor = "#8E44AD"; // Purple
+        public const string FoodPelletPopulationColor = "#2ECC71"; // Green
+
+        //other save file settings
         public const int StatsSaveRate = 3; // seconds
+        
         //UI SETTINGS
         public const double TickRate = 0.0166666666666667; //around 60 FPS
 
-        // Simulation Balance
-        public const float StartingEnergy = 2000f;
+        // SIMULATION BALANCE SETTINGS
         public const float EatDistance = 10f;
         public const float BaseMetabolism = 1.0f;
+<<<<<<< HEAD
 <<<<<<< HEAD
         public const float MutationRate = 0.1; // 10%
 =======
         public const float MutationRate = 3f; // %, might need to make different mutation rates for different entities when the time comes
 >>>>>>> 1c9d56c (Worked on visualizing statistics and drafting plans for final version)
         //public const float MovementMultiplier = 0.005f; //rate of metabolism goes up when moving
+=======
+>>>>>>> 06e81ff (Predator entity introduced)
 
-        // Initialization settings
+
+
+        
+
+        // INITIALIZATION SETTINGS
         public const int InitialCritterNumber = 50;
+        public const int InitialPredatorNumber = 10;
         public const int InitialFoodPelletNumber = 200;
+        
 
         //ENTITIES SETTINGS
-        //Critters
+        //Critter settings
         //Starting values
         public const float StartingCritterSightRadius = 60f;
         public const float StartingCritterSpeed = 150f;
+<<<<<<< HEAD
         public const float StartingCritterMetabolismEfficiency = 0.0035f; // might need to adjust this later
 <<<<<<< HEAD
         public const float StartingCritterReproductionThreshold = StartingEnergy * 1.3f;
@@ -51,13 +75,22 @@ namespace Ecosystem_Simulator.Core
         public const float StartingCritterReproductionThreshold = StartingEnergy * 1.2f;
 >>>>>>> 1c9d56c (Worked on visualizing statistics and drafting plans for final version)
         //Max values
+=======
+        public const float StartingCritterMetabolismEfficiency = 0.0035f; 
+        public const float StartingCritterReproductionThreshold = StartingEnergy * 1.2f;
+        
+
+        //Max gene values
+>>>>>>> 06e81ff (Predator entity introduced)
         public const float MaxCritterSpeed = StartingCritterSpeed * 2;
         public const float MaxCritterSightradius = StartingCritterSightRadius * 2;
-        public const float MaxCritterMetabolismEfficiency = StartingCritterMetabolismEfficiency / 2; // might need to adjust this later
-        public const float MaxCritterReproductionThreshold = StartingCritterReproductionThreshold / 2; //might need to adjust this later
-        //Min values
+        public const float MaxCritterMetabolismEfficiency = StartingCritterMetabolismEfficiency / 2; 
+        public const float MaxCritterReproductionThreshold = StartingCritterReproductionThreshold / 2; 
+        
+        //Min gene values
         public const float MinCritterSpeed = StartingCritterSpeed / 2;
         public const float MinCritterSightradius = StartingCritterSightRadius / 2;
+<<<<<<< HEAD
         public const float MinCritterMetabolismEfficiency = StartingCritterMetabolismEfficiency * 2; // might need to adjust this later
         public const float MinCritterReproductionThreshold = StartingCritterReproductionThreshold * 2; //might need to adjust this later
 <<<<<<< HEAD
@@ -65,13 +98,50 @@ namespace Ecosystem_Simulator.Core
         //Other criiter settings
         public const float CritterBirthEnergyShareRatio = 0.15f; //A critter share this percentage of energy with its baby when giving birth
 >>>>>>> 1c9d56c (Worked on visualizing statistics and drafting plans for final version)
+=======
+        public const float MinCritterMetabolismEfficiency = StartingCritterMetabolismEfficiency * 2; 
+        public const float MinCritterReproductionThreshold = StartingCritterReproductionThreshold * 2; 
 
+        //Other critter settings
+        public const float CritterBirthEnergyShareRatio = 0.15f; //A critter share this percentage of energy with its baby when giving birth
+        public const float CritterHungerEnergy = StartingEnergy * 0.65f; // if energy is below this percentage of starting energy, critter will prioritize finding food 
+        public const float CritterSpeedRatioWhenNotHungry = 0.75f; // if the critter is not hungry, it will move at this percentage of its speed to save energy
+        public const float CritterMutationRate = 0.15f; // when giving birth, the baby's genes will mutate by this percentage of the parent's genes, in either direction (ex: if mutation rate is 0.1 and parent speed is 100, baby's speed will be between 90 and 110)
+        public const float CritterStartingEnergy = 2000f;
+>>>>>>> 06e81ff (Predator entity introduced)
 
+        //predator settings
+        //Starting values 
+        public const float StartingPredatorSightRadius = 30f;
+        public const float StartingPredatorSpeed = 500f;
+        public const float StartingPredatorMetabolismEfficiency = 0.0035f; 
+        public const float StartingPredatorReproductionThreshold = StartingEnergy * 1.05f;
+        
+
+        //Max gene values
+        public const float MaxPredatorSpeed = StartingPredatorSpeed * 3;
+        public const float MaxPredatorSightradius = StartingPredatorSightRadius * 3;
+        public const float MaxPredatorMetabolismEfficiency = StartingPredatorMetabolismEfficiency / 3; 
+        public const float MaxPredatorReproductionThreshold = StartingPredatorReproductionThreshold / 3; 
+        
+        //Min gene values
+        public const float MinPredatorSpeed = StartingPredatorSpeed / 1.5f;
+        public const float MinPredatorSightradius = StartingPredatorSightRadius / 1.5f;
+        public const float MinPredatorMetabolismEfficiency = StartingPredatorMetabolismEfficiency * 1.5f; 
+        public const float MinPredatorReproductionThreshold = StartingPredatorReproductionThreshold * 1.5f; 
+
+        //Other predator settings
+        public const float PredatorBirthEnergyShareRatio = 0.15f; //A predator share this percentage of energy with its baby when giving birth
+        public const float PredatorHungerEnergy = StartingEnergy * 0.9f; // if energy is below this percentage of starting energy, predator will prioritize finding food 
+        public const float PredatorSpeedRatioWhenNotHungry = 0.25f; // if the predator is not hungry, it will move at this percentage of its speed to save energy
+        public const float PredatorMutationRate = 0.35f; // when giving birth, the baby's genes will mutate by this percentage of the parent's genes, in either direction (ex: if mutation rate is 0.35 and parent speed is 500, baby's speed will be between 325 and 675)
+        public const float PredatorEnergyGainFromCritter = CritterStartingEnergy * 0.55f;
+        public const float PredatorStartingEnergy = 1000f;
 
         //FoodPellet settings
         public const float FoodPelletRateOfReproduction = 8.5f; // seconds
         public const int FoodPelletMaxNumberPerRegion = 20; // if the number of pellets around it exceeds this number, no more reproduction will occur
-        public const float FoodPelletEnergyValue = 100f;
+        public const float FoodPelletEnergyValue = 175f;
 
         //Utility functions
         /// <summary>
@@ -82,6 +152,32 @@ namespace Ecosystem_Simulator.Core
             float x = Math.Max(0, Math.Min(WorldWidth, pos.X));
             float y = Math.Max(0, Math.Min(WorldHeight, pos.Y));
             return new Vector2(x, y);
+        }
+
+        /// <summary>
+        /// Ensures that all required save files exist, creating them if they don't.
+        /// </summary>
+        public static void EnsureFilesExist()
+        {
+            if (!System.IO.File.Exists(WorldSaveFile))
+            {
+                System.IO.File.Create(WorldSaveFile).Close();
+            }
+            if (!System.IO.File.Exists(StatsFilePath))
+            {
+                using (var sw = System.IO.File.CreateText(StatsFilePath))
+                {
+                    sw.WriteLine("Time,CritterCount,FoodPelletCount,AvgSpeed,AvgSightRadius,AvgEnergy,AvgMetabolismEfficiency,AvgReproductionThreshold");
+                }
+            }
+            if (!System.IO.File.Exists(PopulationHTMLFile))
+            {
+                System.IO.File.Create(PopulationHTMLFile).Close();
+            }
+            if (!System.IO.File.Exists(CritterDataHTMLFile))
+            {
+                System.IO.File.Create(CritterDataHTMLFile).Close();
+            }
         }
     }
 }
