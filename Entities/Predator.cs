@@ -8,22 +8,25 @@ using Ecosystem_Simulator.Core;
 using Ecosystem_Simulator.Core.Interfaces;
 using Ecosystem_Simulator.Core.Policies;
 using Ecosystem_Simulator.Core.delegates;
+using Ecosystem_Simulator.Entities;
 
 public class Predator: IUpdatable, IMovable
 {
     private readonly IEnergyPolicy _metabolism;
-        private readonly IGenome _dna;
+    private readonly IGenome _dna;
 
-        private float _wanderAngle;
-        public float SightRadius { get; private set; }
-        public float ReproductionThreshold { get; private set; }
-        public float MetabolismEfficiency { get; private set; }
+    private float _wanderAngle;
+    public float SightRadius { get; private set; }
+    public float ReproductionThreshold { get; private set; }
+    public float MetabolismEfficiency { get; private set; }
 
-        public Vector2 Position { get; private set; }
-        public Vector2 Velocity { get; private set; }
-        public float Speed { get; private set; }
-        public float Energy { get; private set; }
-        public bool IsPendingRemoval { get; private set; }
+    public Vector2 Position { get; private set; }
+    public Vector2 Velocity { get; private set; }
+    public float Speed { get; private set; }
+    public float Energy { get; private set; }
+    public bool IsPendingRemoval { get; private set; }
+    public bool CannibalMode => (this.Energy <= Settings.PredatorStartingEnergy * 0.25) ? true : false; //go cannibalistic if below certain energy
+    public event SpawnRequestDelegate OnSpawnRequested;
 
     public Predator(Vector2 startPos, PredatorGenome dna, float Energy = Settings.PredatorStartingEnergy)
     {
@@ -45,11 +48,11 @@ public class Predator: IUpdatable, IMovable
 
     public void Update(double deltaTime, IEnumerable<IEntity> nearbyEntities)
     {
+        if (this.IsPendingRemoval) return;
         List<IEntity> FoodOptions = new List <IEntity>();
         IEntity closestFood = null;
         float minDistanceSq = float.MaxValue;
-        float minDistanceSq = float.MaxValue;
-        float eatDistSq = Settings.EatDistance * Settings.EatDistance;
+        float eatDistSq = Settings.PredatorEatDistance * Settings.PredatorEatDistance;
         float sightRadiusSq = SightRadius * SightRadius;
         //loop through nearby entities and eat if close enough, sense closest food otherwise
         foreach (IEntity entity in nearbyEntities) // Detect stimuli and provide suitable response
@@ -71,42 +74,54 @@ public class Predator: IUpdatable, IMovable
                    else if (entity is Critter c)
                    {
                         //take energy and kill critter
-                        c.IsPendingRemoval = true;
-                        this.Energy += c.Energy + Settings.PredatorEnergyGainFromCritter;
+                        c.Death();
+                        this.Energy += Settings.PredatorEnergyGainFromCritter;
                    }
+                    else if (entity is Predator p && this.CannibalMode && p != this)
+                    {
+                        p.Death();
+                        this.Energy += Settings.PredatorEnergyGainFromPredator;
+                    }
                 }
                 else if (distanceSq < sightRadiusSq && distanceSq < minDistanceSq)
                 {
-                    minDistanceSq = distanceSq;
-                    closestFood = entity;
+                    bool isTarget = (entity is IEatable) ||
+                    (entity is Critter) ||
+                    (entity is Predator p && p != this && this.CannibalMode);
+                    if (isTarget)
+                    {
+                        minDistanceSq = distanceSq;
+                        closestFood = entity;
+                    }
                 }
             }
         }
+
        
 
         // DECISION PHASE
-            if (closestFood != null)
-            {
-                SteerTowards(closestFood.Position);
-            }
-            else
-            {
-                Wander(deltaTime); // Keep moving if nothing is found
-            }
+        if (closestFood != null)
+        {
+            SteerTowards(closestFood.Position);
+        }
+        else
+        {
+            Wander(deltaTime); // Keep moving if nothing is found
+        }
 
-            ApplyMovement(deltaTime);
-            this.Energy -= _metabolism.CalculateLoss(this.Velocity,this.SightRadius, deltaTime);
+        ApplyMovement(deltaTime);
+        this.Energy -= _metabolism.CalculateLoss(this.Velocity,this.SightRadius, deltaTime);
 
-            if (this.Energy >= ReproductionThreshold) 
-            { 
-                SpawnChild();
-            }
+        if (this.Energy >= ReproductionThreshold) 
+        { 
+            SpawnChild();
+        }
 
-            if (this.Energy <= 0)
-            {
-                this.IsPendingRemoval = true; 
-                return;
-            }
+        if (this.Energy <= 0)
+        {
+            this.IsPendingRemoval = true; 
+            return;
+        }
 
     }
 
@@ -177,4 +192,5 @@ public class Predator: IUpdatable, IMovable
             this.Velocity = new Vector2(moveX, moveY);
         }
         public void ForcePosition(Vector2 newPos) => this.Position = newPos;
+        public void Death() => this.IsPendingRemoval = true;
 }

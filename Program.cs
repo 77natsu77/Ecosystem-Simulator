@@ -31,14 +31,14 @@ namespace Ecosystem_Simulator
             StatisticsManager dataSaver = new StatisticsManager();
             dataSaver.SaveWorldManual(world);
 
-            // WORK DONE TODAY
-            // Planning tests to be implemented, should be added tomorrow
-            // Planning modifications to make code more efficienct
-            // Drafted a json parser, should be done by tommorow
-            // Tried visualizing data via python, failed due to shcool computer restrictions
-            // Visualized data through interactive html successful, albiet with alot of stress
-            // Lastly, played around with settings values to maximize birth rate, death rate and mutations, its quite fun :)
-            // Should probably fix the soght raidus visual bug tommorow as well
+            //WORK DONE TODAY
+            // Continued working on the predator classes I did last night (visualization and stats)
+            // Also added cannibal logic
+            // Added headers to the html files
+            // Postponed test implementations due to advent of predators
+            // Started work on json parser
+            // Fixed sight radius visual bug, though I am not sure if that was the best method
+            // Need to configure settings in a way which allows for multiple generations so the stats can become more interesting
         }
 
 

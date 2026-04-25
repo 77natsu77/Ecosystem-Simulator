@@ -23,7 +23,7 @@ namespace Ecosystem_Simulator.Entities
         public float Energy { get; private set; }
         public bool IsPendingRemoval { get; private set; }
 
-        public DefaultGenome DNA => (DefaultGenome)_dna;
+        public CritterGenome DNA => (CritterGenome)_dna;
 
         public event SpawnRequestDelegate OnSpawnRequested;
 
@@ -47,10 +47,10 @@ namespace Ecosystem_Simulator.Entities
 
         public void Update(double deltaTime, IEnumerable<IEntity> nearbyEntities)
         {
-            System.Diagnostics.Debug.WriteLine($"Critter at {Position.X}, {Position.Y} has Velocity {Velocity.X}, {Velocity.Y}");
+            if (this.IsPendingRemoval) return;
             IEatable closestFood = null;
             float minDistanceSq = float.MaxValue;
-            float eatDistSq = Settings.EatDistance * Settings.EatDistance;
+            float eatDistSq = Settings.CritterEatDistance * Settings.CritterEatDistance;
             float sightRadiusSq = SightRadius * SightRadius;
 
             foreach (IEntity entity in nearbyEntities) // Detect stimuli and provide suitable response
@@ -101,7 +101,7 @@ namespace Ecosystem_Simulator.Entities
 
             if (this.Energy <= 0)
             {
-                this.IsPendingRemoval = true; 
+                Death();
                 return;
             }
 
@@ -114,7 +114,7 @@ namespace Ecosystem_Simulator.Entities
             this.Energy -= baby_energy; //check if multiplying by 1-ratio is faster, need to make things more efficienct for heavier tests
             
             // Create new critter at parent position
-            Critter baby = new Critter(this.Position, new DefaultGenome(this.Speed,this.SightRadius,this.MetabolismEfficiency,this.ReproductionThreshold,true),baby_energy );
+            Critter baby = new Critter(this.Position, new CritterGenome(this.Speed,this.SightRadius,this.MetabolismEfficiency,this.ReproductionThreshold,true),baby_energy );
 
             //  Trigger spawn event
             OnSpawnRequested?.Invoke(baby);
@@ -122,7 +122,7 @@ namespace Ecosystem_Simulator.Entities
 
 
 
-        public float CalculateDistance(Vector2 A, Vector2 B)
+        public float CalculateDistance(Vector2 A, Vector2 B)// Move this into vector struct?
         {
             float diffX = A.X - B.X;
             float diffY = A.Y - B.Y;
@@ -185,5 +185,6 @@ namespace Ecosystem_Simulator.Entities
             this.Velocity = new Vector2(moveX, moveY);
         }
         public void ForcePosition(Vector2 newPos) => this.Position = newPos;
+        public void Death() => this.IsPendingRemoval = true;
     }
 }

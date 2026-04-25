@@ -35,7 +35,7 @@
         // Event to put things into the world
         public void Spawn(IUpdatable entity)
         {
-            entity.Position = ClampToWorld(entity.Position); // Prevents spawning outside the walls
+           // entity.Position = ClampToWorld(entity.Position); // Prevents spawning outside the walls
             _entities.Add(entity);
             _grid.Register(entity);
 
