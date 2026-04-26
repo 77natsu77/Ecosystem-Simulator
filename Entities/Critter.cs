@@ -4,7 +4,6 @@ using Ecosystem_Simulator.Core.Interfaces;
 using Ecosystem_Simulator.Core.Policies;
 using System;
 using System.Collections.Generic;
-using System.Runtime.Remoting.Messaging;
 namespace Ecosystem_Simulator.Entities
 {
     public class Critter : IUpdatable, IMovable

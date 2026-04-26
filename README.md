@@ -1,5 +1,5 @@
 # Ecosystem Simulator (C#)  
-![CI Status](<CI_BADGE_URL>)
+[![CI](https://github.com/77natsu77/Ecosystem-Simulator/workflows/CI/badge.svg)](https://github.com/77natsu77/Ecosystem-Simulator/actions)
 
 ## Overview
 This project is a C#-based ecosystem simulator that models predator–prey dynamics using a genetic algorithm. Built as part of my preparation for Software Engineering Degree Apprenticeships, it focuses on performance optimisation, clean architecture, and data-driven analysis. The simulation evolves two interacting species—Critters and Predators—over time, producing exportable datasets and visualisations to analyse emergent behaviour.

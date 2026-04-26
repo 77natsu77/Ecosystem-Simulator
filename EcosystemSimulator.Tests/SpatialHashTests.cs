@@ -73,7 +73,7 @@ namespace EcosystemSimulator.Tests
             Vector2 nearbyPos = new Vector2(520f, 520f);  // About 28 units away
             Vector2 farPos = new Vector2(900f, 900f);     // About 565 units away
 
-            DefaultGenome genome = new DefaultGenome();
+            CritterGenome genome = new CritterGenome();
             Critter centerCritter = new Critter(centerPos, genome);
             Critter nearbyCritter = new Critter(nearbyPos, genome);
             Critter farCritter = new Critter(farPos, genome);
@@ -112,7 +112,7 @@ namespace EcosystemSimulator.Tests
             // ARRANGE
             SpatialHash grid = new SpatialHash();
             Vector2 position = new Vector2(100f, 100f);
-            DefaultGenome genome = new DefaultGenome();
+            CritterGenome genome = new CritterGenome();
             Critter critter = new Critter(position, genome);
 
             // ACT: Register the critter
@@ -137,7 +137,7 @@ namespace EcosystemSimulator.Tests
             Vector2 pos2 = new Vector2(60f, 60f);
             Vector2 pos3 = new Vector2(70f, 70f);
 
-            DefaultGenome genome = new DefaultGenome();
+            CritterGenome genome = new CritterGenome();
             Critter critter1 = new Critter(pos1, genome);
             Critter critter2 = new Critter(pos2, genome);
             Critter critter3 = new Critter(pos3, genome);

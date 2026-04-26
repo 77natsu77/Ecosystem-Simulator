@@ -47,15 +47,6 @@ namespace Ecosystem_Simulator.Core
         public const float CritterEatDistance = 20f;
         public const float PredatorEatDistance = 10f;
         public const float BaseMetabolism = 1.0f;
-<<<<<<< HEAD
-<<<<<<< HEAD
-        public const float MutationRate = 0.1; // 10%
-=======
-        public const float MutationRate = 3f; // %, might need to make different mutation rates for different entities when the time comes
->>>>>>> 1c9d56c (Worked on visualizing statistics and drafting plans for final version)
-        //public const float MovementMultiplier = 0.005f; //rate of metabolism goes up when moving
-=======
->>>>>>> 06e81ff (Predator entity introduced)
 
 
 
@@ -67,28 +58,6 @@ namespace Ecosystem_Simulator.Core
         public const int InitialFoodPelletNumber = 500;
         
 
-<<<<<<< HEAD
-        //ENTITIES SETTINGS
-        //Critter settings
-        //Starting values
-        public const float StartingCritterSightRadius = 60f;
-        public const float StartingCritterSpeed = 150f;
-<<<<<<< HEAD
-        public const float StartingCritterMetabolismEfficiency = 0.0035f; // might need to adjust this later
-<<<<<<< HEAD
-        public const float StartingCritterReproductionThreshold = StartingEnergy * 1.3f;
-=======
-        public const float StartingCritterReproductionThreshold = StartingEnergy * 1.2f;
->>>>>>> 1c9d56c (Worked on visualizing statistics and drafting plans for final version)
-        //Max values
-=======
-        public const float StartingCritterMetabolismEfficiency = 0.0035f; 
-        public const float StartingCritterReproductionThreshold = StartingEnergy * 1.2f;
-        
-
-        //Max gene values
->>>>>>> 06e81ff (Predator entity introduced)
-=======
         // ENTITIES SETTINGS
         // CRITTER SETTINGS //
         // Starting values
@@ -99,7 +68,6 @@ namespace Ecosystem_Simulator.Core
         
 
         // Max gene values
->>>>>>> 0b1546e (Finished up on predator class logic, slightly improved html file and entity rendering UI)
         public const float MaxCritterSpeed = StartingCritterSpeed * 2;
         public const float MaxCritterSightradius = StartingCritterSightRadius * 2;
         public const float MaxCritterMetabolismEfficiency = StartingCritterMetabolismEfficiency / 2; 
@@ -108,15 +76,6 @@ namespace Ecosystem_Simulator.Core
         // Min gene values
         public const float MinCritterSpeed = StartingCritterSpeed / 2;
         public const float MinCritterSightradius = StartingCritterSightRadius / 2;
-<<<<<<< HEAD
-        public const float MinCritterMetabolismEfficiency = StartingCritterMetabolismEfficiency * 2; // might need to adjust this later
-        public const float MinCritterReproductionThreshold = StartingCritterReproductionThreshold * 2; //might need to adjust this later
-<<<<<<< HEAD
-=======
-        //Other criiter settings
-        public const float CritterBirthEnergyShareRatio = 0.15f; //A critter share this percentage of energy with its baby when giving birth
->>>>>>> 1c9d56c (Worked on visualizing statistics and drafting plans for final version)
-=======
         public const float MinCritterMetabolismEfficiency = StartingCritterMetabolismEfficiency * 2; 
         public const float MinCritterReproductionThreshold = StartingCritterReproductionThreshold * 2; 
 
@@ -126,7 +85,6 @@ namespace Ecosystem_Simulator.Core
         public const float CritterSpeedRatioWhenNotHungry = 0.8f; // if the critter is not hungry, it will move at this percentage of its speed to save energy
         public const float CritterMutationRate = 0.15f; // when giving birth, the baby's genes will mutate by this percentage of the parent's genes, in either direction (ex: if mutation rate is 0.1 and parent speed is 100, baby's speed will be between 90 and 110)
         public const float CritterStartingEnergy = 2000f;
->>>>>>> 06e81ff (Predator entity introduced)
 
         // PREDATOR SETTINGS //
         // Starting values 

@@ -18,7 +18,7 @@ namespace EcosystemSimulator.Tests
             // ARRANGE
             World world = new World(800f, 600f);
             Vector2 position = new Vector2(100f, 100f);
-            DefaultGenome genome = new DefaultGenome();
+            CritterGenome genome = new CritterGenome();
             Critter critter = new Critter(position, genome);
 
             int entitiesBeforeSpawn = world.Entities.Count();
@@ -37,20 +37,23 @@ namespace EcosystemSimulator.Tests
             // ARRANGE
             World world = new World(1200f, 800f);
             int expectedCritters = 10;
+            int expectedPredators = 5;
             int expectedFood = 20;
             int expectedTotal = expectedCritters + expectedFood;
 
             // ACT
-            world.Seed(expectedCritters, expectedFood);
+            world.Seed(expectedCritters, expectedPredators, expectedFood);
 
             // ASSERT
             Assert.Equal(expectedTotal, world.Entities.Count());
             
             // Verify correct types were spawned
             int actualCritters = world.Entities.OfType<Critter>().Count();
+            int actualPredators = world.Entities.OfType<Predator>().Count();
             int actualFood = world.Entities.OfType<FoodPellet>().Count();
             
             Assert.Equal(expectedCritters, actualCritters);
+            Assert.Equal(expectedPredators, actualPredators);
             Assert.Equal(expectedFood, actualFood);
         }
 
@@ -60,7 +63,7 @@ namespace EcosystemSimulator.Tests
             // ARRANGE: Create a critter with almost no energy (will die)
             World world = new World(800f, 600f);
             Vector2 position = new Vector2(100f, 100f);
-            DefaultGenome genome = new DefaultGenome();
+            CritterGenome genome = new CritterGenome();
             
             // Very low energy - will die after tick
             Critter dyingCritter = new Critter(position, genome, Energy: 0.1f);
@@ -86,7 +89,7 @@ namespace EcosystemSimulator.Tests
         {
             // ARRANGE: Create world with critters and food
             World world = new World(800f, 600f);
-            world.Seed(critterCount: 5, foodCount: 10);
+            world.Seed(critterCount: 5, predatorCount: 3, foodCount: 10);
 
             // Get initial positions
             var initialPositions = world.Entities.OfType<Critter>()
@@ -144,7 +147,7 @@ namespace EcosystemSimulator.Tests
             // ARRANGE: World with one critter that will reproduce
             World world = new World(800f, 600f);
             Vector2 position = new Vector2(100f, 100f);
-            DefaultGenome genome = new DefaultGenome();
+            CritterGenome genome = new CritterGenome();
             
             // Give critter enough energy to reproduce
             float reproEnergy = Settings.StartingCritterReproductionThreshold + 500f;

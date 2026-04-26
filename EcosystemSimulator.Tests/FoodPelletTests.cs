@@ -1,4 +1,5 @@
 using Ecosystem_Simulator.Core;
+using Ecosystem_Simulator.Core.Interfaces;
 using Ecosystem_Simulator.Entities;
 using System.Collections.Generic;
 using Xunit;
@@ -61,7 +62,7 @@ namespace EcosystemSimulator.Tests
             // ACT & ASSERT: Update should not throw
             var exception = Record.Exception(() =>
             {
-                food.Update(deltaTime: 0.016, nearby: new List<Ecosystem_Simulator.Core.Interfaces.IEntity>());
+                food.Update(0.1f, new List<IEntity>());
             });
 
             Assert.Null(exception);
