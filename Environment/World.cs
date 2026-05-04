@@ -14,8 +14,7 @@
 
         // This holds every active entity in the simulation
         // might make it public with get and private set, along with width and height
-        private readonly List<IUpdatable> _entities = new List<IUpdatable>();
-        public IEnumerable<IEntity> Entities => _entities;
+        public List<IUpdatable> Entities {get; private set;} = new List<IUpdatable>();
         public readonly List<Critter> _critterList;
         public readonly List<FoodPellet> _foodPelletList;
         private readonly float _width;
@@ -36,7 +35,7 @@
         public void Spawn(IUpdatable entity)
         {
            // entity.Position = ClampToWorld(entity.Position); // Prevents spawning outside the walls
-            _entities.Add(entity);
+            Entities.Add(entity);
             _grid.Register(entity);
 
             // If the entity is capable of requesting spawns, listen to it!
@@ -57,7 +56,7 @@
 
         public void Tick(double deltaTime)
         {
-            foreach (IUpdatable entity in _entities)
+            foreach (IUpdatable entity in Entities)
             {
                 // Save old position before update for spatial hash update later
                 Vector2 oldPos = entity.Position;
@@ -76,12 +75,12 @@
             }
 
             // Cleanup Loop
-            for (int i = _entities.Count - 1; i >= 0; i--)
+            for (int i = Entities.Count - 1; i >= 0; i--)
             {
-                if (_entities[i].IsPendingRemoval)
+                if (Entities[i].IsPendingRemoval)
                 {
-                    _grid.Unregister(_entities[i]); // Tell grid to forget them
-                    _entities.RemoveAt(i);          // Tell world to forget them
+                    _grid.Unregister(Entities[i]); // Tell grid to forget them
+                    Entities.RemoveAt(i);          // Tell world to forget them
                 }
             }
             //Final step: process spawn queue

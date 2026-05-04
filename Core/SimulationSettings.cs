@@ -9,8 +9,8 @@ namespace Ecosystem_Simulator.Core
         public static readonly Random Rng = new Random();
 
         // WORLD SETTINGS
-        public const float WorldWidth = 1200f;
-        public const float WorldHeight = 1000f;
+        public const float WorldWidth = 1100f;
+        public const float WorldHeight = 700f;
 
         // GRID SETTINGS
         public const float CellSize = 100f;
@@ -20,11 +20,16 @@ namespace Ecosystem_Simulator.Core
         
         // SAVE SETTINGS
         // file(s) settings
-        public const string WorldSaveFile = "../Exports/WorldData.json"; 
-        public const string StatsFilePath = "../Exports/stats.csv";
-        public const string PopulationHTMLFile = "../Exports/population_over_time.html"; 
-        public const string CritterDataHTMLFile = "../Exports/critter_data_over_time.html";
-        public const string PredatorDataHTMLFile = "../Exports/predator_data_over_time.html";
+        private static readonly string RootPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", ".."));
+    
+        private static readonly string ExportsFolder = Path.Combine(RootPath, "Exports");
+
+        public static readonly string WorldSaveFile = Path.Combine(ExportsFolder, "WorldData.json"); 
+        public static readonly string StatsFilePath = Path.Combine(ExportsFolder, "stats.csv");
+        public static readonly string PopulationHTMLFile = Path.Combine(ExportsFolder, "population_over_time.html"); 
+        public static readonly string CritterDataHTMLFile = Path.Combine(ExportsFolder, "critter_data_over_time.html");
+        public static readonly string PredatorDataHTMLFile = Path.Combine(ExportsFolder, "predator_data_over_time.html");
+                            
 
         // colors for html files
         public const string SpeedColor = "#FF5733"; // Red-Orange
@@ -44,18 +49,18 @@ namespace Ecosystem_Simulator.Core
         public const bool DISPLAY_VELOCITY_ARROWS = true;
 
         // SIMULATION BALANCE SETTINGS
-        public const float CritterEatDistance = 20f;
+        public const float CritterEatDistance = 10f;
         public const float PredatorEatDistance = 10f;
-        public const float BaseMetabolism = 1.0f;
+        public const float BaseMetabolism = 1.5f;
 
 
 
         
 
         // INITIALIZATION SETTINGS
-        public const int InitialCritterNumber = 50;
+        public const int InitialCritterNumber = 20;
         public const int InitialPredatorNumber = 5;
-        public const int InitialFoodPelletNumber = 500;
+        public const int InitialFoodPelletNumber = 100;
         
 
         // ENTITIES SETTINGS
@@ -64,7 +69,7 @@ namespace Ecosystem_Simulator.Core
         public const float StartingCritterSightRadius = 50f;
         public const float StartingCritterSpeed = 120f;
         public const float StartingCritterMetabolismEfficiency = 0.0055f; 
-        public const float StartingCritterReproductionThreshold = CritterStartingEnergy * 1.2f;
+        public const float StartingCritterReproductionThreshold = CritterStartingEnergy * 1.8f;
         
 
         // Max gene values
@@ -82,16 +87,16 @@ namespace Ecosystem_Simulator.Core
         // Other critter settings
         public const float CritterBirthEnergyShareRatio = 0.3f; //A critter share this percentage of energy with its baby when giving birth
         public const float CritterHungerEnergy = CritterStartingEnergy * 0.7f; // if energy is below this percentage of starting energy, critter will prioritize finding food 
-        public const float CritterSpeedRatioWhenNotHungry = 0.8f; // if the critter is not hungry, it will move at this percentage of its speed to save energy
+        public const float CritterSpeedRatioWhenNotHungry = 0.65f; // if the critter is not hungry, it will move at this percentage of its speed to save energy
         public const float CritterMutationRate = 0.15f; // when giving birth, the baby's genes will mutate by this percentage of the parent's genes, in either direction (ex: if mutation rate is 0.1 and parent speed is 100, baby's speed will be between 90 and 110)
         public const float CritterStartingEnergy = 2000f;
 
         // PREDATOR SETTINGS //
         // Starting values 
-        public const float StartingPredatorSightRadius = 20f;
-        public const float StartingPredatorSpeed = 200f;
-        public const float StartingPredatorMetabolismEfficiency = 0.0075f; 
-        public const float StartingPredatorReproductionThreshold = PredatorStartingEnergy * 1.65f;
+        public const float StartingPredatorSightRadius = 15f;
+        public const float StartingPredatorSpeed = 90f;
+        public const float StartingPredatorMetabolismEfficiency = 0.03f; 
+        public const float StartingPredatorReproductionThreshold = PredatorStartingEnergy * 3f;
         
 
         // Max gene values
@@ -107,18 +112,19 @@ namespace Ecosystem_Simulator.Core
         public const float MinPredatorReproductionThreshold = StartingPredatorReproductionThreshold * 1.5f; 
 
         // Other predator settings
-        public const float PredatorBirthEnergyShareRatio = 0.65f; //A predator share this percentage of energy with its baby when giving birth
-        public const float PredatorHungerEnergy = PredatorStartingEnergy * 0.7f; // if energy is below this percentage of starting energy, predator will prioritize finding food 
-        public const float PredatorSpeedRatioWhenNotHungry = 0.125f; // if the predator is not hungry, it will move at this percentage of its speed to save energy
-        public const float PredatorMutationRate = 0.425f; // when giving birth, the baby's genes will mutate by this percentage of the parent's genes, in either direction (ex: if mutation rate is 0.35 and parent speed is 500, baby's speed will be between 325 and 675)
-        public const float PredatorEnergyGainFromCritter = CritterStartingEnergy * 0.3f; // 10% energy transfer would be more realistic, but who cares!
+        public const float PredatorBirthEnergyShareRatio = 0.655f; //A predator share this percentage of energy with its baby when giving birth
+        public const float PredatorHungerEnergy = PredatorStartingEnergy * 0.525f; // if energy is below this percentage of starting energy, predator will prioritize finding food 
+        public const float PredatorSpeedRatioWhenNotHungry = 0.85f; // if the predator is not hungry, it will move at this percentage of its speed to save energy
+        public const float PredatorMutationRate = 0.375f; // when giving birth, the baby's genes will mutate by this percentage of the parent's genes, in either direction (ex: if mutation rate is 0.35 and parent speed is 500, baby's speed will be between 325 and 675)
+        public const float PredatorEnergyGainFromCritter = CritterStartingEnergy * 0.15f; // a 10% energy transfer would be more realistic, but who cares!
+        // TODO: implement varying energy gained from cannibalism based on the prey's energy, currently its just a flat value which is not very realistic but it makes the simulation more stable and less likely to have crazy energy spikes from cannibalism, which can cause a lot of chaos in the ecosystem. Maybe in the future I could implement a more complex energy transfer system that takes into account the prey's energy and the predator's metabolism efficiency or something like that.
         public const float PredatorEnergyGainFromPredator = PredatorStartingEnergy * 0.5f;// energy gained from cannibalism...
         public const float PredatorStartingEnergy = 1000f;
 
         // FOODPELLET SETTINGS //
-        public const float FoodPelletRateOfReproduction = 1f; // seconds
-        public const int FoodPelletMaxNumberPerRegion = 45; // if the number of pellets around it exceeds this number, no more reproduction will occur
-        public const float FoodPelletEnergyValue = 120f;
+        public const float FoodPelletRateOfReproduction = 0.55f; // seconds
+        public const int FoodPelletMaxNumberPerRegion = 30; // if the number of pellets around it exceeds this number, no more reproduction will occur
+        public const float FoodPelletEnergyValue = 140f;
 
         // Utility functions
         /// <summary>
@@ -126,41 +132,35 @@ namespace Ecosystem_Simulator.Core
         /// </summary>
         public static Vector2 GetLegalPosition(Vector2 pos)
         {
-            float x = Math.Max(0, Math.Min(WorldWidth, pos.X));
-            float y = Math.Max(0, Math.Min(WorldHeight, pos.Y));
+            float x = Math.Clamp(pos.X, 0, WorldWidth);
+            float y = Math.Clamp(pos.Y, 0, WorldHeight);
             return new Vector2(x, y);
         }
 
         /// <summary>
         /// Ensures that all required save files exist, creating them if they don't.
         /// </summary>
-        public static void EnsureFilesExist()// could I make this function even better??? maybe add eacheach of the files to a list and iterate through or something similar
+        public static void EnsureFilesExist()
         {
+            // Create an array of the absolute paths we defined above, easy to scale if we add more files in the future
+            string[] allFiles = {
+                StatsFilePath,
+                WorldSaveFile,
+                PopulationHTMLFile,
+                CritterDataHTMLFile,
+                PredatorDataHTMLFile
+            };
 
-            string directory = Path.GetDirectoryName(WorldSaveFile);
-            if (!Directory.Exists(directory))
+            foreach (string filePath in allFiles)
             {
-                Directory.CreateDirectory(directory);
-            }
-            directory = Path.GetDirectoryName(StatsFilePath);
-            if (!Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-            directory = Path.GetDirectoryName(PopulationHTMLFile);
-            if (!Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-            directory = Path.GetDirectoryName(CritterDataHTMLFile);
-            if (!Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-            directory = Path.GetDirectoryName(PredatorDataHTMLFile);
-            if (!Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
+                // Getting the directory name from the full path
+                string directory = Path.GetDirectoryName(filePath);
+
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    // This creates the entire folder chain (Exports/Subfolders) at once
+                    Directory.CreateDirectory(directory);
+                }
             }
         }
     }

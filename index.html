@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ecosystem Simulator</title>
+    <style>
+        body { background-color: #1e1e1e; color: white; font-family: 'Consolas', monospace; display: flex; }
+        canvas { background-color: white; border: 2px solid gray; margin: 10px; }
+        #ui-panel { background: rgba(0,0,0,0.8); padding: 20px; width: 450px; margin: 10px; border-radius: 5px; }
+        .stable { color: limegreen; font-weight: bold; }
+        .extinct { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <canvas id="simCanvas" width="1200" height="800"></canvas>
+    
+    <div id="ui-panel">
+        <h3>------ ECOSYSTEM STATS ------</h3>
+        <h4>--- POPULATION DETAILS ---</h4>
+        <div>Population(Critter): <span id="s-critters"></span></div>
+        <div>Critter Status: <span id="s-c-status"></span></div>
+        <br>
+        <div>Population(Predator): <span id="s-preds"></span></div>
+        <div>Predator Status: <span id="s-p-status"></span></div>
+        <br>
+        <div>Food Count: <span id="s-food"></span></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        async function fetchAndUpdate() {
+            try {
+                const response = await fetch('world_state.json?t=' + new Date().getTime());
+                console.log("Fetched world state at " + new Date().toLocaleTimeString());
+                const data = await response.json();
+                console.log("Parsed world state:", data);
+                // Update Canvas Size dynamically if needed
+                canvas.width = data.Width;
+                canvas.height = data.Height;
+
+                // Update UI Panel
+                console.log(data.Stats.Critters, data.Stats.Predators, data.Stats.Food);
+                document.getElementById('s-critters').innerText = data.Stats.Critters;
+                document.getElementById('s-preds').innerText = data.Stats.Predators;
+                document.getElementById('s-food').innerText = data.Stats.Food;
+                console.log("Updating UI with stats:", data.Stats);
+                const cStatus = document.getElementById('s-c-status');
+                cStatus.innerText = data.Stats.Critters > 0 ? "STABLE" : "EXTINCT";
+                cStatus.className = data.Stats.Critters > 0 ? "stable" : "extinct";
+
+                const pStatus = document.getElementById('s-p-status');
+                pStatus.innerText = data.Stats.Predators > 0 ? "STABLE" : "EXTINCT";
+                pStatus.className = data.Stats.Predators > 0 ? "stable" : "extinct";
+
+                // Clear screen
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw Entities
+                data.Entities.forEach(e => {
+                    if (e.Type === "Food") {
+                        ctx.fillStyle = "limegreen";
+                        ctx.beginPath();
+                        ctx.arc(e.X, e.Y, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    } 
+                    else if (e.Type === "Critter") {
+                        // Sight Radius
+                        ctx.fillStyle = "rgba(128, 128, 128, 0.12)"; // Alpha 30 ~ 0.12
+                        ctx.beginPath();
+                        ctx.arc(e.X, e.Y, e.Sight, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Body
+                        ctx.fillStyle = `rgb(${e.R}, ${e.G}, ${e.B})`;
+                        ctx.beginPath();
+                        ctx.arc(e.X, e.Y, e.Size / 2, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Velocity Arrow
+                        if (data.ShowArrows) drawArrow(e.X, e.Y, e.VelX, e.VelY, e.Sight, "black");
+                    }
+                    else if (e.Type === "Predator") {
+                        // Sight Radius (Red if cannibal, Black if normal)
+                        ctx.fillStyle = e.Cannibal ? "rgba(255, 0, 0, 0.12)" : "rgba(0, 0, 0, 0.12)";
+                        ctx.beginPath();
+                        ctx.arc(e.X, e.Y, e.Sight, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Diamond Body
+                        ctx.save();
+                        ctx.translate(e.X, e.Y);
+                        ctx.fillStyle = `rgb(${e.R}, ${e.G}, ${e.B})`;
+                        ctx.strokeStyle = "black";
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(0, -e.Size);
+                        ctx.lineTo(e.Size/2, 0);
+                        ctx.lineTo(0, e.Size);
+                        ctx.lineTo(-e.Size/2, 0);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.stroke();
+                        ctx.restore();
+
+                        // Velocity Arrow
+                        if (data.ShowArrows) drawArrow(e.X, e.Y, e.VelX, e.VelY, e.Sight, "black");
+                    }
+                });
+            } catch (err) { console.error("Error fetching or processing data:", err); }
+            
+            requestAnimationFrame(fetchAndUpdate); // Loop as fast as browser allows
+        }
+
+        function drawArrow(x, y, vx, vy, sight, color) {
+            if (vx === 0 && vy === 0) return;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(Math.atan2(vy, vx)); // JS handles the rotation math for us!
+            
+            let tipX = sight * 2;
+            
+            // Shaft
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(tipX, 0);
+            ctx.strokeStyle = color;
+            ctx.stroke();
+            
+            // Arrowhead
+            ctx.beginPath();
+            ctx.moveTo(tipX, 0);
+            ctx.lineTo(tipX - 10, 5);
+            ctx.lineTo(tipX - 10, -5);
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        fetchAndUpdate();
+    </script>
+</body>
+</html>

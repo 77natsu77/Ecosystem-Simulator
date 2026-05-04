@@ -1,3 +1,15 @@
+# Output and Live Data
+world_state.json
+world_state_temp.json
+Exports/
+plots/
+
+# Build folders
+[Bb]in/
+[Oo]bj/
+.vscode/
+.venv/
+
 # Build artifacts
 bin/
 obj/

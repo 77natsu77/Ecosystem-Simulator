@@ -186,8 +186,8 @@ public class Predator: IUpdatable, IMovable
             _wanderAngle += (float)(Settings.Rng.NextDouble() * 0.5 - 0.25); // Small jitter
 
             // Move a ALOT slower when wondering to reduce energy consumption
-            float moveX = (float)Math.Cos(_wanderAngle) * (this.Speed * 0.5f);
-            float moveY = (float)Math.Sin(_wanderAngle) * (this.Speed * 0.5f);
+            float moveX = (float)Math.Cos(_wanderAngle) * (this.Speed * Settings.PredatorSpeedRatioWhenNotHungry);
+            float moveY = (float)Math.Sin(_wanderAngle) * (this.Speed * Settings.PredatorSpeedRatioWhenNotHungry);
 
             this.Velocity = new Vector2(moveX, moveY);
         }
