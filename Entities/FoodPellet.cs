@@ -13,11 +13,13 @@ namespace Ecosystem_Simulator.Entities
         public float EnergyValue => Settings.FoodPelletEnergyValue;
 
         private double _age = 0;
+        public int Id { get; private set; } // Unique identifier for the critter, set in constructor
         public event SpawnRequestDelegate OnSpawnRequested;
 
         public FoodPellet(Vector2 SpawnPoint)
         {
             this.Position = SpawnPoint;
+            this.Id = this.GetHashCode(); // Assign a unique ID to the food pellet
         }
 
         public void Update(double deltaTime, IEnumerable<IEntity> nearby)

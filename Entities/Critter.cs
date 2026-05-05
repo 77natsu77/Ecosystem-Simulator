@@ -21,7 +21,8 @@ namespace Ecosystem_Simulator.Entities
         public float Speed { get; private set; }
         public float Energy { get; private set; }
         public bool IsPendingRemoval { get; private set; }
-
+        public int Id { get; private set; } // Unique identifier for the critter, set in constructor
+        public void SetEntityId(int value) => Id = value; // Method to set the entity ID, used by World when spawning
         public CritterGenome DNA => (CritterGenome)_dna;
 
         public event SpawnRequestDelegate OnSpawnRequested;
@@ -31,7 +32,8 @@ namespace Ecosystem_Simulator.Entities
             this.Position = startPos;
             this._dna = dna;
             this.Energy = Energy;
-            
+            this.Id = this.GetHashCode(); // Assign a unique ID to the critter
+
             this.Speed = dna.Speed;
             this.SightRadius = dna.SightRadius;
             this.MetabolismEfficiency = dna.MetabolismEfficiency;

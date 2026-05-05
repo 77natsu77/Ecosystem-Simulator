@@ -5,6 +5,8 @@ namespace Ecosystem_Simulator.Core
 {
     public static class Settings //TODO: ENSURE ALL SETTINGS ARE ORGANISED IN AN APPROPRIATE MANNER
     {
+
+        public static int NextEntityId = 0; // Global counter for assigning unique IDs to entities
         // RNG
         public static readonly Random Rng = new Random();
 
@@ -42,7 +44,7 @@ namespace Ecosystem_Simulator.Core
         public const string PredatorPopulationColor = "#000000"; // Black
 
         // other save file settings
-        public const int StatsSaveRate = 1; // seconds, the rate at which data is saved to files(this does not include world data which is saved at the very end)
+        public const int StatsSaveRate = 10; // seconds, the rate at which data is saved to files(this does not include world data which is saved at the very end)
         
         //UI SETTINGS
         public const double TickRate = 0.0166666666666667; //around 60 FPS
@@ -52,10 +54,6 @@ namespace Ecosystem_Simulator.Core
         public const float CritterEatDistance = 10f;
         public const float PredatorEatDistance = 10f;
         public const float BaseMetabolism = 1.5f;
-
-
-
-        
 
         // INITIALIZATION SETTINGS
         public const int InitialCritterNumber = 20;
@@ -113,13 +111,14 @@ namespace Ecosystem_Simulator.Core
 
         // Other predator settings
         public const float PredatorBirthEnergyShareRatio = 0.655f; //A predator share this percentage of energy with its baby when giving birth
-        public const float PredatorHungerEnergy = PredatorStartingEnergy * 0.525f; // if energy is below this percentage of starting energy, predator will prioritize finding food 
+        public const float PredatorHungerEnergy = PredatorStartingEnergy * 0.6125f; // if energy is below this percentage of starting energy, predator will prioritize finding food 
         public const float PredatorSpeedRatioWhenNotHungry = 0.85f; // if the predator is not hungry, it will move at this percentage of its speed to save energy
         public const float PredatorMutationRate = 0.375f; // when giving birth, the baby's genes will mutate by this percentage of the parent's genes, in either direction (ex: if mutation rate is 0.35 and parent speed is 500, baby's speed will be between 325 and 675)
         public const float PredatorEnergyGainFromCritter = CritterStartingEnergy * 0.15f; // a 10% energy transfer would be more realistic, but who cares!
         // TODO: implement varying energy gained from cannibalism based on the prey's energy, currently its just a flat value which is not very realistic but it makes the simulation more stable and less likely to have crazy energy spikes from cannibalism, which can cause a lot of chaos in the ecosystem. Maybe in the future I could implement a more complex energy transfer system that takes into account the prey's energy and the predator's metabolism efficiency or something like that.
         public const float PredatorEnergyGainFromPredator = PredatorStartingEnergy * 0.5f;// energy gained from cannibalism...
         public const float PredatorStartingEnergy = 1000f;
+        public const float PredatorCannibalThreshold = PredatorStartingEnergy * 0.4f; // when predator energy is below this threshold, it will consider cannibalism as a food source
 
         // FOODPELLET SETTINGS //
         public const float FoodPelletRateOfReproduction = 0.55f; // seconds

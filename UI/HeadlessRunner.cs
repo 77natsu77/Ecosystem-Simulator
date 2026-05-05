@@ -16,6 +16,7 @@ namespace Ecosystem_Simulator.UI
     // Note: This is separate from StatsEntry because StatsEntry contains some data we don't want to send to the frontend every frame (like timestamps and counts), and also doesn't contain any entity-specific data, which we need for drawing them on the canvas
     public struct EntityExportDTO
     {
+        public int Id { get; set; } // Added Id for selection and inspection purposes, so the frontend can identify entities uniquely even if they have the same position and type. This is important for clicking on them and showing their details in the inspector panel. The Id is generated in the constructors of Critter, Predator, and FoodPellet using GetHashCode(), which should provide a unique identifier for each entity instance.
         public string Type { get; set; } = "";
         public float X { get; set; }
         public float Y { get; set; }
@@ -28,8 +29,9 @@ namespace Ecosystem_Simulator.UI
         public float VelY { get; set; }
         public float Speed { get; set; }
         public bool Cannibal { get; set; }
+        public float Energy { get; set; }   // Added: To show in the inspector
 
-        public EntityExportDTO(string type, float x, float y, float size = 5, int r = 255, int g = 255, int b = 255, float sight = 0, float velX = 0, float velY = 0, float speed = 0, bool cannibal = false)
+        public EntityExportDTO(string type, float x, float y, float size = 5,float energy = 0, int r = 255, int g = 255, int b = 255, float sight = 0, float velX = 0, float velY = 0, float speed = 0, bool cannibal = false, int id = 0)
         {
             Type = type;
             X = x;
@@ -43,6 +45,8 @@ namespace Ecosystem_Simulator.UI
             VelY = velY;
             Speed = speed;
             Cannibal = cannibal;
+            Energy = energy; // Initialize Energy to the provided value
+            Id = id; // Initialize Id to the provided value
         }
     }
 
@@ -101,7 +105,7 @@ namespace Ecosystem_Simulator.UI
             float invPredatorEnergy = 1f / Settings.PredatorStartingEnergy;
             exportEntities.Clear(); // Clear the list before adding new entities
 
-            for (int i = _world.Entities.Count - 1; i >= 0; i--)
+            for (int i = _world.Entities.Count - 1; i >= 0; i--)// Iterating backwards just in case we need to remove any entities in the future (currently we don't, but it's a common pattern to avoid issues with modifying a list while iterating)
             {
                 var entity = _world.Entities[i];
                 if (entity is Critter c)
@@ -115,9 +119,10 @@ namespace Ecosystem_Simulator.UI
                     float eRatio = Math.Clamp(c.Energy * invCritterEnergy, 0, 1);
                     
                     exportEntities.Add(new EntityExportDTO {
+                        Id = c.Id,
                         Type = "Critter", X = c.Position.X, Y = c.Position.Y,
                         Size = 3 + (eRatio * 7), R = (int)((1 - eRatio) * 255), G = 60, B = (int)(eRatio * 255),
-                        Sight = c.SightRadius, VelX = c.Velocity.X, VelY = c.Velocity.Y, Speed = c.Speed
+                        Sight = c.SightRadius, VelX = c.Velocity.X, VelY = c.Velocity.Y, Speed = c.Speed, Energy = c.Energy
                     });
                 }
                 else if (entity is Predator p)
@@ -131,16 +136,19 @@ namespace Ecosystem_Simulator.UI
                     float eRatio = Math.Clamp(invPredatorEnergy * p.Energy, 0, 1);
                     
                     exportEntities.Add(new EntityExportDTO {
+                        Id = p.Id,
                         Type = "Predator", X = p.Position.X, Y = p.Position.Y,
                         Size = 3 + (eRatio * 7), R = (int)((1 - eRatio) * 255), G = 150, B = (int)(eRatio * 255),
-                        Sight = p.SightRadius, Cannibal = p.CannibalMode, VelX = p.Velocity.X, VelY = p.Velocity.Y, Speed = p.Speed
+                        Sight = p.SightRadius, Cannibal = p.CannibalMode, VelX = p.Velocity.X, VelY = p.Velocity.Y, Speed = p.Speed, Energy = p.Energy
                     });
                 }
                 else if (entity is FoodPellet f)
                 {
                     foodCount++;
                     exportEntities.Add(new EntityExportDTO {
-                        Type = "Food", X = f.Position.X, Y = f.Position.Y
+                        Id = f.Id,
+                        Type = "Food", X = f.Position.X, Y = f.Position.Y, Energy = f.EnergyValue,
+                        Size = 4, R = 255, G = 255, B = 255
                     });
                 }
             }

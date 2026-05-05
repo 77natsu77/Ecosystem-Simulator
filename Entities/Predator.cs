@@ -25,7 +25,8 @@ public class Predator: IUpdatable, IMovable
     public float Speed { get; private set; }
     public float Energy { get; private set; }
     public bool IsPendingRemoval { get; private set; }
-    public bool CannibalMode => (this.Energy <= Settings.PredatorStartingEnergy * 0.25) ? true : false; //go cannibalistic if below certain energy
+    public int Id { get; private set; } // Unique identifier for the critter, set in constructor
+    public bool CannibalMode => (this.Energy <= Settings.PredatorCannibalThreshold) ? true : false; //go cannibalistic if below certain energy
     public event SpawnRequestDelegate OnSpawnRequested;
 
     public Predator(Vector2 startPos, PredatorGenome dna, float Energy = Settings.PredatorStartingEnergy)
@@ -33,7 +34,8 @@ public class Predator: IUpdatable, IMovable
         this.Position = startPos;
         this._dna = dna;
         this.Energy = Energy;
-        
+        this.Id = this.GetHashCode(); // Assign a unique ID to the predator
+
         this.Speed = dna.Speed;
         this.SightRadius = dna.SightRadius;
         this.MetabolismEfficiency = dna.MetabolismEfficiency;

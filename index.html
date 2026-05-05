@@ -24,24 +24,63 @@
         <div>Predator Status: <span id="s-p-status"></span></div>
         <br>
         <div>Food Count: <span id="s-food"></span></div>
+
+        <h4>--- ENTITY INSPECTOR ---</h4>
+        <div id="entity-details">Click an entity to inspect...</div>
+
     </div>
+    <div id="ecosystem-stats">
+    </div>
+
+   
 
     <script>
         const canvas = document.getElementById('simCanvas');
         const ctx = canvas.getContext('2d');
+        let entities = [];
+        let selectedEntityId = null;
+        //  Click Handler
+        canvas.addEventListener('mousedown', (event) => {
+            // Get mouse pos relative to canvas
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
 
+            let closestEntity = null;
+            let minDistance = 25; // Selection "hitbox" radius in pixels, should be larger than entity size for easier clicking
+
+
+            entities.forEach(entity => {
+                // Pythagoras to find distance from click to entity center
+                const dx = mouseX - entity.X;
+                const dy = mouseY - entity.Y;
+                const distance = Math.hypot(dx, dy); // More accurate and cleaner than Math.sqrt(dx*dx + dy*dy)
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestEntity = entity;
+                }
+            });
+
+            if (closestEntity) {
+                selectedEntityId = closestEntity.Id;
+            } else {
+                selectedEntityId = null; // Clicked empty space
+                document.getElementById('entity-details').innerText = "Click an entity to inspect...";
+            }
+        });
         async function fetchAndUpdate() {
             try {
                 const response = await fetch('world_state.json?t=' + new Date().getTime());
                 console.log("Fetched world state at " + new Date().toLocaleTimeString());
                 const data = await response.json();
                 console.log("Parsed world state:", data);
-                // Update Canvas Size dynamically if needed
+                // Update Canvas Size dynamically if needed (based on world dimensions)
                 canvas.width = data.Width;
                 canvas.height = data.Height;
+                entities = data.Entities; // Store entities for inspector access
 
                 // Update UI Panel
-                console.log(data.Stats.Critters, data.Stats.Predators, data.Stats.Food);
                 document.getElementById('s-critters').innerText = data.Stats.Critters;
                 document.getElementById('s-preds').innerText = data.Stats.Predators;
                 document.getElementById('s-food').innerText = data.Stats.Food;
@@ -107,7 +146,38 @@
                         // Velocity Arrow
                         if (data.ShowArrows) drawArrow(e.X, e.Y, e.VelX, e.VelY, e.Sight, "black");
                     }
-                });
+                    if (selectedEntityId !== null && e.Id === selectedEntityId) {
+                    // MDN canvas API tutorial on creating a pulsing highlight effect is the basis for this code, along with some other styling and tweaks to make it look more "glowy" and dynamic. The idea is to create a ring around the selected entity that pulses in size and brightness to draw attention to it.
+                    ctx.save();
+                    
+                    // Pulse value oscillates smoothly between 0 and 1
+                    const pulse = (Math.sin(Date.now() / 400) + 1) / 2;
+                    
+                    ctx.beginPath();
+                    // Aura grows and shrinks slightly with the pulse
+                    const auraRadius = (e.Size / 2) + 3 + (pulse * 5);
+                    ctx.arc(e.X, e.Y, auraRadius, 0, Math.PI * 2); 
+
+                    // THE GLOW EFFECT
+                    // Use shadowBlur for the "soft" light feel
+                    ctx.shadowBlur = 20 + (pulse * 15); 
+                    ctx.shadowColor = "rgba(0, 255, 255, 0.8)";
+                    
+                    // Lower globalAlpha makes the ring itself softer
+                    ctx.globalAlpha = 0.2 + (pulse * 0.4);
+                    
+                    ctx.strokeStyle = "red"; // The core color of the glow
+                    ctx.lineWidth = 3 + (pulse * 1.5); // Line width also pulses for extra emphasis
+                    
+                    // Ensure no dashes for a solid look
+                    ctx.setLineDash([]); 
+
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+            );
+            updateInspector();
             } catch (err) { console.error("Error fetching or processing data:", err); }
             
             requestAnimationFrame(fetchAndUpdate); // Loop as fast as browser allows
@@ -137,6 +207,29 @@
             ctx.fill();
             
             ctx.restore();
+        }
+
+        //  Update Logic for Inspector Panel
+        function updateInspector() {
+            if (selectedEntityId === null) return;
+
+            // Find the locked entity in the current frame's data
+            const selected = entities.find(e => e.Id === selectedEntityId);
+
+            if (selected) {
+                document.getElementById('entity-details').innerHTML = `
+                    <strong>Type:</strong> ${selected.Type}<br>
+                    <strong>ID:</strong> ${selected.Id}<br>
+                    <strong>Energy:</strong> ${selected.Energy.toFixed(2)}<br>
+                    <strong>Speed:</strong> ${selected.Speed.toFixed(2)}<br>
+                    <strong>Position:</strong> (${selected.X.toFixed(0)}, ${selected.Y.toFixed(0)})<br>
+                    <strong>Behavior:</strong> ${selected.Cannibal ? "CANNIBAL" : "Standard"}
+                `;
+            } else {
+                // Entity likely died
+                document.getElementById('entity-details').innerHTML = "<em>Entity has died or disappeared.</em>";
+                selectedEntityId = null;
+            }
         }
 
         fetchAndUpdate();
