@@ -23,8 +23,15 @@ The simulation can be viewed live in the browser, while historical data is expor
 - `Exports/population_over_time.html` – Population trends  
 - `Exports/critter_data_over_time.html` – Trait evolution  
 - `Exports/predator_data_over_time.html` – Predator adaptation  
+### Simulation
+https://github.com/user-attachments/assets/f572b674-0209-487c-bc96-823249f29f60
 
-![Simulation Screenshot](<SCREENSHOT_URL>)
+### HTML Graphs
+<img width="744" height="401" alt="Population Graph" src="https://github.com/user-attachments/assets/f223635f-e7b8-4fc5-926e-6f6a8db3e5ca"/>
+
+<img width="744" height="401" alt="Critter Traits Graph" src="https://github.com/user-attachments/assets/df874aa5-2469-43a2-be09-6aa1cbe0ad0b"/>
+
+<img width="744" height="401" alt="Predator Traits Graph" src="https://github.com/user-attachments/assets/83779b1b-636f-4cdd-a2ac-06bf61257c1a"/>
 
 ## How to Run
 This project is designed to run seamlessly in GitHub Codespaces or any local VS Code environment.
