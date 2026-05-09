@@ -28,7 +28,27 @@ public class Predator: IUpdatable, IMovable
     public bool IsPendingRemoval { get; private set; }
     public int Id { get; private set; } // Unique identifier for the critter, set in constructor
     // Might change this as it checks energy every frame, which could be costly, but it is needed to determine if the predator should be in cannibal mode or not, which drastically changes its behavior and is a key part of the simulation, so I think it is worth it, especially since it is just a simple float comparison
-    public bool CannibalMode => (this.Energy <= Settings.PredatorCannibalThreshold) ? true : false; //go cannibalistic if below certain energy
+    // Adding a giick where sight radius increases by 1.,5 when cannibalistuic to make them more likely to find other predators to eat and get out of cannibal mode faster
+    public bool CannibalMode => functionCannibalMode();
+    public bool SightRadiusBuffed { get; private set; } = false; // Track if the sight radius has been buffed for cannibal mode
+    private bool functionCannibalMode(){ // Check if energy is below the cannibal threshold and adjust sight radius accordingly
+        if (Energy <= Settings.PredatorCannibalThreshold)
+        {
+            if (!SightRadiusBuffed)
+            {
+                SightRadius = SightRadius * Settings.PredatorCannibalSightRadiusBuff; // Increase sight radius  when in cannibal mode to help find other predators to eat
+                SightRadiusBuffed = true;
+            }
+            return true;
+        }
+        else
+        {
+            SightRadius = _dna.SightRadius; // Reset sight radius to original value from DNA when not in cannibal mode
+            SightRadiusBuffed = false;
+            return false;
+        }
+    }
+
     public event SpawnRequestDelegate OnSpawnRequested;
 
     public Predator(Vector2 startPos, PredatorGenome dna, float Energy = Settings.PredatorStartingEnergy)
@@ -113,7 +133,7 @@ public class Predator: IUpdatable, IMovable
 
     public void DebugInfo()
         {
-            Console.WriteLine($"Critter {Id} - Pos: ({Position.X:F2}, {Position.Y:F2}), Energy: {Energy:F2}, Speed: {Speed:F2}, Sight: {SightRadius:F2}");
+            Console.WriteLine($"Predator {Id} - Pos: ({Position.X:F2}, {Position.Y:F2}), Energy: {Energy:F2}, Speed: {Speed:F2}, Sight: {SightRadius:F2}");
         }
 
     public void DetectCollisions(IEnumerable<IEntity> nearbyEntities)
@@ -126,7 +146,7 @@ public class Predator: IUpdatable, IMovable
                     float dY = entity.Position.Y - this.Position.Y;
                     float distSq = (dX * dX) + (dY * dY);
                     float collisionDistSq = Settings.CollisionDistance * Settings.CollisionDistance;
-
+                    if (distSq < 0.5f) continue; // Skip if positions are exactly the same, likely a spawn issue
                     if (distSq < collisionDistSq)
                     {
                         // Simple collision response: invert velocity

@@ -163,12 +163,12 @@ namespace EcosystemSimulator.Tests
             bool foundSightVariation = false;
             bool foundMetabVariation = false;
             bool foundReproVariation = false;
-
             for (int i = 0; i < 30; i++)
             {
                 PredatorGenome child = new PredatorGenome(
-                    parentSpeed, parentSight, parentMetab, parentRepro
+                    parentSpeed, parentSight, parentMetab, parentRepro,true // Force mutation for testing
                 );
+                
 
                 // Check if any trait differs from parent (allowing for small floating point errors)
                 if (Math.Abs(child.Speed - parentSpeed) > 0.01f)

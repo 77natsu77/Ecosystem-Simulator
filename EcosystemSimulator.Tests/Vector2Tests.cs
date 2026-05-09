@@ -1,4 +1,5 @@
 using Ecosystem_Simulator.Core.Structs;
+using Xunit;
 
 namespace EcosystemSimulator.Tests
 {

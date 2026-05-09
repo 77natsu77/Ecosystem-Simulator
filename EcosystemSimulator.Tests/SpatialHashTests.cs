@@ -3,6 +3,7 @@ using Ecosystem_Simulator.Core.Interfaces;
 using Ecosystem_Simulator.Entities;
 using Ecosystem_Simulator.Environment;
 using Ecosystem_Simulator.Core.Structs;
+using Xunit;
 namespace EcosystemSimulator.Tests
 {
     /// <summary>

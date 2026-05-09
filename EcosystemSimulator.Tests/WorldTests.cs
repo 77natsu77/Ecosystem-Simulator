@@ -2,7 +2,7 @@ using Ecosystem_Simulator.Core;
 using Ecosystem_Simulator.Core.Structs;
 using Ecosystem_Simulator.Entities;
 using Ecosystem_Simulator.Environment;
-
+using Xunit;
 
 namespace EcosystemSimulator.Tests
 {
@@ -35,10 +35,10 @@ namespace EcosystemSimulator.Tests
         {
             // ARRANGE
             World world = new World(1200f, 800f);
-            int expectedCritters = 10;
-            int expectedPredators = 5;
-            int expectedFood = 20;
-            int expectedTotal = expectedCritters + expectedFood;
+            int expectedCritters = Settings.InitialCritterNumber;
+            int expectedPredators = Settings.InitialPredatorNumber;
+            int expectedFood = Settings.InitialFoodPelletNumber;
+            int expectedTotal = expectedCritters + expectedPredators + expectedFood;
 
             // ACT
             world.Seed(expectedCritters, expectedPredators, expectedFood);
@@ -116,8 +116,8 @@ namespace EcosystemSimulator.Tests
         public void Constructor_SetsDimensionsCorrectly()
         {
             // ARRANGE & ACT
-            float expectedWidth = 1920f;
-            float expectedHeight = 1080f;
+            float expectedWidth = Settings.WorldWidth;
+            float expectedHeight = Settings.WorldHeight;
             World world = new World(expectedWidth, expectedHeight);
 
             // ASSERT

@@ -53,10 +53,10 @@ namespace Ecosystem_Simulator.Core
         public const float CritterEatDistance = 10f;
         public const float PredatorEatDistance = 10f;
         public const float CollisionDistance = 4.5f; // if two entities are within this distance, they will be considered colliding and will adjust their positions to avoid overlap
-        public const float BaseMetabolism = 1.5f;
+        public const float BaseMetabolism = 1.67f;
 
         // INITIALIZATION SETTINGS
-        public const int InitialCritterNumber = 35;
+        public const int InitialCritterNumber = 30;
         public const int InitialPredatorNumber = 10;
         public const int InitialFoodPelletNumber = 100;
         
@@ -67,7 +67,7 @@ namespace Ecosystem_Simulator.Core
         public const float StartingCritterSightRadius = 52.5f;
         public const float StartingCritterSpeed = 125f;
         public const float StartingCritterMetabolismEfficiency = 0.0055f; 
-        public const float StartingCritterReproductionThreshold = CritterStartingEnergy * 1.5f;
+        public const float StartingCritterReproductionThreshold = CritterStartingEnergy * 1.325f;
         
 
         // Max gene values
@@ -91,10 +91,10 @@ namespace Ecosystem_Simulator.Core
 
         // PREDATOR SETTINGS //
         // Starting values 
-        public const float StartingPredatorSightRadius = 21.5f;
-        public const float StartingPredatorSpeed = 105f;
-        public const float StartingPredatorMetabolismEfficiency = 0.0285f; 
-        public const float StartingPredatorReproductionThreshold = PredatorStartingEnergy * 2f;
+        public const float StartingPredatorSightRadius = 20f;
+        public const float StartingPredatorSpeed = 95f;
+        public const float StartingPredatorMetabolismEfficiency = 0.05f; 
+        public const float StartingPredatorReproductionThreshold = PredatorStartingEnergy * 3.5f;
         
 
         // Max gene values
@@ -112,19 +112,20 @@ namespace Ecosystem_Simulator.Core
         // Other predator settings
         public const float PredatorBirthEnergyShareRatio = 0.655f; //A predator share this percentage of energy with its baby when giving birth
         public const float PredatorHungerEnergy = PredatorStartingEnergy * 0.6525f; // if energy is below this percentage of starting energy, predator will prioritize finding food 
-        public const float PredatorSpeedRatioWhenNotHungry = 0.85f; // if the predator is not hungry, it will move at this percentage of its speed to save energy
-        public const float PredatorMutationRate = 0.3275f; // when giving birth, the baby's genes will mutate by this percentage of the parent's genes, in either direction (ex: if mutation rate is 0.35 and parent speed is 500, baby's speed will be between 325 and 675)
-        public const float PredatorEnergyGainFromCritter = CritterStartingEnergy * 0.15f; // a 10% energy transfer would be more realistic, but who cares!
+        public const float PredatorSpeedRatioWhenNotHungry = 0.775f; // if the predator is not hungry, it will move at this percentage of its speed to save energy
+        public const float PredatorMutationRate = 0.3125f; // when giving birth, the baby's genes will mutate by this percentage of the parent's genes, in either direction (ex: if mutation rate is 0.35 and parent speed is 500, baby's speed will be between 325 and 675)
+        public const float PredatorEnergyGainFromCritter = CritterStartingEnergy * 0.175f; // a 10% energy transfer would be more realistic, but who cares!
         // TODO: implement varying energy gained from cannibalism based on the prey's energy, currently its just a flat value which is not very realistic but it makes the simulation more stable and less likely to have crazy energy spikes from cannibalism, which can cause a lot of chaos in the ecosystem. Maybe in the future I could implement a more complex energy transfer system that takes into account the prey's energy and the predator's metabolism efficiency or something like that.
-        public const float PredatorEnergyGainFromPredator = PredatorStartingEnergy * 0.5f;// energy gained from cannibalism...
-        public const float PredatorStartingEnergy = 1000f;
-        public const float PredatorCannibalThreshold = PredatorStartingEnergy * 0.42f; // when predator energy is below this threshold, it will consider cannibalism as a food source
+        public const float PredatorEnergyGainFromPredator = PredatorStartingEnergy * 0.55f;// energy gained from cannibalism...
+        public const float PredatorStartingEnergy = 1150f;
+        public const float PredatorCannibalThreshold = PredatorStartingEnergy * 0.4275f; // when predator energy is below this threshold, it will consider cannibalism as a food source
+        public const float PredatorCannibalSightRadiusBuff = 1.5f; // when in cannibal mode, predator's sight radius is multiplied by this value to help find other predators to eat
 
         // FOODPELLET SETTINGS //
-        public const float FoodPelletRateOfReproduction = 2.75f; // seconds
-        public const int FoodPelletMaxNumberPerRegion = 60; // if the number of pellets around it exceeds this number, no more reproduction will occur
-        public const float FoodPelletEnergyValue = 120f;
-        public const float FoodPelletSpreadAmount = 80f; // the maximum distance from the parent pellet that a new pellet can spawn, this creates a more natural spread of food pellets across the world instead of them all clumping up in the same spot
+        public const float FoodPelletRateOfReproduction = 2.25f; // seconds
+        public const int FoodPelletMaxNumberPerRegion = 65; // if the number of pellets around it exceeds this number, no more reproduction will occur
+        public const float FoodPelletEnergyValue = 130f;
+        public const float FoodPelletSpreadAmount = 85f; // the maximum distance from the parent pellet that a new pellet can spawn, this creates a more natural spread of food pellets across the world instead of them all clumping up in the same spot
 
         // Utility functions
         /// <summary>

@@ -15,7 +15,6 @@ namespace Ecosystem_Simulator
             var builder = WebApplication.CreateBuilder(args); // This sets up a minimal web server using ASP.NET Core, which is perfect for our needs. It's lightweight and easy to use, and it has built-in support for SignalR, which we'll use for real-time communication with the frontend.
             
             builder.WebHost.UseUrls("http://0.0.0.0:5000");// forces the server to listen on all network interfaces, which is necessary for it to be accessible from the frontend running in the browser. By default, ASP.NET Core only listens on localhost, so we need to explicitly tell it to listen on all interfaces. This way, when the frontend tries to connect to the SignalR hub at "http://localhost:5000/worldHub", it will be able to reach the server and establish a connection successfully.
-            
             // Register services
            builder.Services.AddSignalR()
        .AddJsonProtocol(options => {

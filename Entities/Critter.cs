@@ -60,7 +60,8 @@ namespace Ecosystem_Simulator.Entities
                     float dY = entity.Position.Y - this.Position.Y;
                     float distSq = (dX * dX) + (dY * dY);
                     float collisionDistSq = Settings.CollisionDistance * Settings.CollisionDistance;
-
+                   
+                    if (distSq < 0.5f) continue; // Skip if positions are exactly the same, likely a spawn issue
                     if (distSq < collisionDistSq)
                     {
                         // Simple collision response: invert velocity
