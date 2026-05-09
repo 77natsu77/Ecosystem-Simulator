@@ -1,68 +1,65 @@
-
-
-
-
 # Ecosystem Simulator (C#)  
 [![CI](https://github.com/77natsu77/Ecosystem-Simulator/workflows/CI/badge.svg)](https://github.com/77natsu77/Ecosystem-Simulator/actions)
 
 ## Overview
-This project is a high-performance C#-based ecosystem simulator that models predator–prey dynamics using a genetic algorithm. Built as part of my preparation for Software Engineering Degree Apprenticeships, it focuses on performance optimization, clean architecture, and data-driven analysis. The simulation evolves two interacting species—Critters and Predators—over time, running on a headless C# engine that streams data to a real-time HTML5 web frontend.
+A high‑performance, headless C# ecosystem simulator that models predator–prey dynamics using genetic algorithms and streams live state to a browser UI via SignalR. Built as part of my preparation for Software Engineering Degree applications, this project focuses on algorithmic efficiency, data visualization, and modern headless architecture.
 
 ## Features
-- **Decoupled Architecture:** A headless C# simulation engine operating independently from the HTML5 Canvas visualization layer.
-- **Dual-Species Evolution:** Independent genomes and behaviors with genetic algorithms mutating four traits (speed, sight, metabolism, reproduction).  
-- **Predator AI:** Adaptive hunting logic, including a "cannibal mode" triggered under low energy starvation conditions.  
-- **Algorithmic Efficiency:** Custom spatial hashing for O(1) neighbor lookups, bypassing the traditional O(n²) bottlenecks of entity collision.
-- **Atomic I/O Streaming:** Safely streams simulation state to a built-in Python web server at 60 FPS without read/write thread locks.
-- **Data Pipeline:** Real-time statistics tracking exported to CSV, paired with interactive Chart.js visualizations and Python pandas analysis.
+- **Headless Architecture:** C# simulation engine runs independently from the HTML5 Canvas frontend.
+- **SignalR Real‑Time Streaming:** Live frames are pushed directly to the browser (no file I/O jitter).
+- **Dual‑Species Evolution:** Genetic traits mutate across speed, sight, metabolism, and reproduction.
+- **Predator AI:** Includes adaptive hunting logic and cannibal mode under starvation.
+- **Algorithmic Efficiency:** Custom spatial hashing enables O(1) neighbor lookups.
+- **Data Pipeline:** Statistics exported to CSV with Chart.js visualizations + Python analytics.
 
 ## Technical Approach
-A key focus of this project is algorithmic efficiency and system design. Naive neighbor detection scales poorly (O(n²)), which becomes impractical as populations grow. To address this, spatial hashing partitions entities into grid cells, reducing lookup complexity to near O(1). 
-
-Furthermore, migrating from a coupled GUI (WinForms) to a Headless/Web architecture demonstrates modern backend engineering. The C# engine acts purely as a fast number-cruncher, atomically writing state data which is served via a background Python HTTP server to an agnostic web client. This mirrors real-world distributed systems where performance constraints drive architectural decisions.
+Naive neighbor detection is O(n²), which is impractical at scale. This simulator uses spatial hashing to reduce lookup to ~O(1).  
+The project evolved from a WinForms UI to a **headless + web** architecture, where the C# engine acts as a fast computation core, and the browser receives live frames over SignalR.
 
 ## Visualizations & Analytics
-The simulation can be viewed live in the browser, while historical data is exported and rendered using Chart.js:
-- `index.html` – Live, real-time HTML5 Canvas simulation rendering  
-- `Exports/population_over_time.html` – Population trends  
-- `Exports/critter_data_over_time.html` – Trait evolution  
-- `Exports/predator_data_over_time.html` – Predator adaptation  
-### Simulation
+Live sim view in browser plus historical graphs:
+- `index.html` – live HTML5 canvas view  
+- `Exports/population_over_time.html` – population trends  
+- `Exports/critter_data_over_time.html` – trait evolution  
+- `Exports/predator_data_over_time.html` – predator adaptation  
 
-# Current (index.html)
+### Simulation
+**Current (Stream-based WebSockets(HTML5 + SignalR))**  
+https://github.com/user-attachments/assets/02d7dddd-4ec5-4a3e-bc12-e3de2647de99
+
+**Previous (File based json)**
 https://github.com/user-attachments/assets/f572b674-0209-487c-bc96-823249f29f60
 
-# Previous (Winforms)
+**Previous (Winforms)**
 https://github.com/user-attachments/assets/bf675d37-6fd8-48d3-8529-52602ea6620f
+
 
 ### HTML Graphs
 <img width="744" height="401" alt="Population Graph" src="https://github.com/user-attachments/assets/f223635f-e7b8-4fc5-926e-6f6a8db3e5ca"/>
-
-
 <img width="744" height="401" alt="Critter Traits Graph" src="https://github.com/user-attachments/assets/df874aa5-2469-43a2-be09-6aa1cbe0ad0b"/>
-
-
 <img width="744" height="401" alt="Predator Traits Graph" src="https://github.com/user-attachments/assets/83779b1b-636f-4cdd-a2ac-06bf61257c1a"/>
 
 ## How to Run
-This project is designed to run seamlessly in GitHub Codespaces or any local VS Code environment.
+This project runs in GitHub Codespaces or local VS Code.
 
-1. Clone the repository and open it in VS Code.
-2. Ensure you have the .NET 10 SDK and Python 3 installed.
-3. Press **F5** (or select "Run and Debug"). The C# engine will automatically compile, start the simulation, and spin up a background Python web server on Port 8000.
-4. Your browser will automatically open to `http://localhost:8000` to view the live simulation.
-5. (Optional) Run the Python scripts in the `/Analytics` folder to perform deep-dive analysis on the generated CSV data.
+1. Clone the repository and open in VS Code.  
+2. Ensure **.NET 10 SDK** is installed.  
+3. Press **F5** (or Run/Debug).  
+4. The simulation starts and hosts a SignalR server.  
+5. Open `http://localhost:5000` to view the live simulation.
+
+(Optional) Run Python scripts in `/Analytics` for deeper CSV analysis.
 
 ## Testing
-The project includes 35 unit tests written with xUnit, covering core simulation logic such as genome mutation, energy policies, and spatial hashing behavior. Continuous Integration is configured via GitHub Actions to ensure build stability on every push.
+The project includes 35 xUnit tests covering genome mutation, energy policies, and spatial hashing. CI runs on GitHub Actions.
 
 ## Architecture
 - **Core/** – Simulation engine, genomes, policies, statistics  
 - **Entities/** – Critter, Predator, FoodPellet  
-- **Environment/** – World management and spatial hashing  
-- **UI/** – HeadlessRunner orchestrating the engine and web server
-- **Analytics/** – Python scripts for processing CSV datasets  
-- **Exports/** – Generated JSON state files, CSV logs, and HTML charts  
+- **Environment/** – World + spatial hashing  
+- **UI/** – HeadlessRunner + SignalR frame streaming  
+- **Analytics/** – Python scripts for CSV processing  
+- **Exports/** – CSV logs and HTML charts  
 
 Design patterns used:
 - Strategy Pattern (energy policies)  
@@ -70,14 +67,16 @@ Design patterns used:
 - Observer Pattern (event-driven spawning)  
 
 ## What’s Next
-- Transition from atomic file writing to WebSockets for zero-allocation memory streaming.
-- Introduce multithreading/parallel processing for the `Tick()` update loop.
-- Expand simulation complexity (e.g., seasons, varying terrain, new species).
+- Delta‑compression for frame updates (reduce payload size).
+- Parallelize `Tick()` for large populations.
+- Add seasonal dynamics and terrain variations.
+- Expand to additional species types.
 
 ## Tech Stack
-- C# 12 / .NET 10
-- HTML5 Canvas & JavaScript
-- Python 3 (http.server, Pandas, Matplotlib)
+- C# 12 / .NET 10  
+- SignalR (real‑time WebSocket streaming)  
+- HTML5 Canvas & JavaScript  
+- Python 3 (Pandas, Matplotlib)  
 - Chart.js  
 - xUnit  
 - GitHub Actions CI/CD
