@@ -1,3 +1,7 @@
+
+
+
+
 # Ecosystem Simulator (C#)  
 [![CI](https://github.com/77natsu77/Ecosystem-Simulator/workflows/CI/badge.svg)](https://github.com/77natsu77/Ecosystem-Simulator/actions)
 
@@ -24,12 +28,19 @@ The simulation can be viewed live in the browser, while historical data is expor
 - `Exports/critter_data_over_time.html` – Trait evolution  
 - `Exports/predator_data_over_time.html` – Predator adaptation  
 ### Simulation
+
+# Current (index.html)
 https://github.com/user-attachments/assets/f572b674-0209-487c-bc96-823249f29f60
+
+# Previous (Winforms)
+https://github.com/user-attachments/assets/bf675d37-6fd8-48d3-8529-52602ea6620f
 
 ### HTML Graphs
 <img width="744" height="401" alt="Population Graph" src="https://github.com/user-attachments/assets/f223635f-e7b8-4fc5-926e-6f6a8db3e5ca"/>
 
+
 <img width="744" height="401" alt="Critter Traits Graph" src="https://github.com/user-attachments/assets/df874aa5-2469-43a2-be09-6aa1cbe0ad0b"/>
+
 
 <img width="744" height="401" alt="Predator Traits Graph" src="https://github.com/user-attachments/assets/83779b1b-636f-4cdd-a2ac-06bf61257c1a"/>
 
