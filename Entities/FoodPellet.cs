@@ -1,8 +1,7 @@
 ﻿using Ecosystem_Simulator.Core;
 using Ecosystem_Simulator.Core.Interfaces;
 using Ecosystem_Simulator.Core.delegates;
-using Ecosystem_Simulator.Environment;
-using System.Collections.Generic;
+using Ecosystem_Simulator.Core.Structs;
 
 namespace Ecosystem_Simulator.Entities
 {
@@ -36,8 +35,10 @@ namespace Ecosystem_Simulator.Entities
                 if (nearbyCount < Settings.FoodPelletMaxNumberPerRegion)
                 {
                     Vector2 spawnPos = this.Position;
-                    float offsetX = (float)(Settings.Rng.NextDouble() * 40 - 20);
-                    float offsetY = (float)(Settings.Rng.NextDouble() * 40 - 20);
+                    // change calculaton to use variable from settings to determine spread amount
+                    float spreadAmount = Settings.FoodPelletSpreadAmount;
+                    float offsetX = (float)(Settings.Rng.NextDouble() * spreadAmount - spreadAmount / 2);
+                    float offsetY = (float)(Settings.Rng.NextDouble() * spreadAmount - spreadAmount / 2);
                     spawnPos = Settings.GetLegalPosition(new Vector2(this.Position.X + offsetX, this.Position.Y + offsetY));
 
                     //Trigger spawn event

@@ -1,4 +1,5 @@
 using Ecosystem_Simulator.Core;
+using Ecosystem_Simulator.Core.Structs;
 using Ecosystem_Simulator.Entities;
 using Ecosystem_Simulator.Environment;
 using System;
@@ -8,92 +9,59 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Diagnostics;
+ using Microsoft.AspNetCore.SignalR;
 
 namespace Ecosystem_Simulator.UI
 {
     // A strict blueprint so System.Text.Json doesn't get confused
     // Made this for entities and didnt make specific DTOs for critters/predators because they share so many properties, and the frontend can just check the "Type" field to see which is which. If we wanted to add more entity types in the future, we could just add more optional fields to this DTO and populate them as needed.
     // Note: This is separate from StatsEntry because StatsEntry contains some data we don't want to send to the frontend every frame (like timestamps and counts), and also doesn't contain any entity-specific data, which we need for drawing them on the canvas
-    public struct EntityExportDTO
-    {
-        public int Id { get; set; } // Added Id for selection and inspection purposes, so the frontend can identify entities uniquely even if they have the same position and type. This is important for clicking on them and showing their details in the inspector panel. The Id is generated in the constructors of Critter, Predator, and FoodPellet using GetHashCode(), which should provide a unique identifier for each entity instance.
-        public string Type { get; set; } = "";
-        public float X { get; set; }
-        public float Y { get; set; }
-        public float Size { get; set; }
-        public int R { get; set; }
-        public int G { get; set; }
-        public int B { get; set; }
-        public float Sight { get; set; }
-        public float VelX { get; set; }
-        public float VelY { get; set; }
-        public float Speed { get; set; }
-        public bool Cannibal { get; set; }
-        public float Energy { get; set; }   // Added: To show in the inspector
-
-        public EntityExportDTO(string type, float x, float y, float size = 5,float energy = 0, int r = 255, int g = 255, int b = 255, float sight = 0, float velX = 0, float velY = 0, float speed = 0, bool cannibal = false, int id = 0)
-        {
-            Type = type;
-            X = x;
-            Y = y;
-            Size = size;
-            R = r;
-            G = g;
-            B = b;
-            Sight = sight;
-            VelX = velX;
-            VelY = velY;
-            Speed = speed;
-            Cannibal = cannibal;
-            Energy = energy; // Initialize Energy to the provided value
-            Id = id; // Initialize Id to the provided value
-        }
-    }
+    
 
     public class HeadlessRunner
     {
         private World _world;
         private List<StatsEntry> _historyList = new List<StatsEntry>();
-        private StatisticsManager _stats_manager = new StatisticsManager();
+        private StatisticsManager _stats_manager = new StatisticsManager(null); // We will set the world in the stats manager later, but we need to initialize it here to avoid null reference exceptions when trying to save stats before the first log
         private double _internalTimestamp = 0;
         private float _secondsElapsed = 0;
         private bool _isRunning = true;
-        private Process _webServerProcess; // We'll use Python's built-in HTTP server to serve the frontend files, which is simple and reliable. This Process object allows us to kill the server when the C# app closes.
         private List<EntityExportDTO> exportEntities = new List<EntityExportDTO>(); // This is what we'll serialize and send to the frontend
-        public HeadlessRunner(World world)
+        
+        private IHubContext<WorldHub> _hub; // This is how we'll send data to the frontend in real-time using SignalR
+        public HeadlessRunner(World world, IHubContext<WorldHub> hub)
         {
             _world = world;
+            _hub = hub;
+            _stats_manager = new StatisticsManager(world); // Now that we have the world, we can initialize the stats manager properly
         }
+
 
         public void Start()
         {
-            try {
-            // Attempt to kill any process using port 8000 (to prevent crashes if the previous instance didn't close properly). This is a Linux/Mac command; on Windows, users will have to manually ensure port 8000 is free.
-            Process.Start("fuser", "-k 8000/tcp")?.WaitForExit();} 
-            catch { /* Ignore if fuser isn't found */ }
-            Console.WriteLine("Simulation started. Open index.html to view.");
-            
+            Console.WriteLine("Simulation started. Open http://localhost:5000/ to view.");
+
             int delayMs = (int)(Settings.TickRate * 1000);
-            if (delayMs <= 0) delayMs = 16; // Failsafe if TickRate is broken
-            StartWebServer();
+            if (delayMs <= 0) delayMs = 16;
+
             while (_isRunning)
             {
                 try
                 {
                     _world.Tick(Settings.TickRate);
-                    ProcessFrame();
+                    ProcessFrame(); // fire-and-forget is ok for 20 FPS
                 }
                 catch (Exception ex)
                 {
-                    // If the game crashes, it will appear in terminal, but the web server will keep running so you can inspect the last state
                     Console.WriteLine($"CRASH DURING TICK: {ex.Message}");
                 }
-                
-                Thread.Sleep(delayMs); 
+
+                Thread.Sleep(delayMs);
             }
         }
 
-        private void ProcessFrame()
+        // might break this up into smaller methods in the future, but for now it works fine as is. This is where we gather all the data we want to send to the frontend every frame, and also where we handle the stats logging and saving to CSV/HTML. It's a bit of a "kitchen sink" method right now, but it works for our purposes. In the future, we might want to refactor it into smaller methods if it gets too unwieldy.
+        private  async Task ProcessFrame() // This is where we gather all the data we want to send to the frontend every frame, and also where we handle the stats logging and saving to CSV/HTML. It's a bit of a "kitchen sink" method right now, but it works for our purposes. In the future, we might want to refactor it into smaller methods if it gets too unwieldy.
         {
             // Obtaining and Rendering statistics
             int critterCount = 0, foodCount = 0, predatorCount = 0;
@@ -107,7 +75,7 @@ namespace Ecosystem_Simulator.UI
 
             for (int i = _world.Entities.Count - 1; i >= 0; i--)// Iterating backwards just in case we need to remove any entities in the future (currently we don't, but it's a common pattern to avoid issues with modifying a list while iterating)
             {
-                var entity = _world.Entities[i];
+                var entity = _world.Entities[i]; 
                 if (entity is Critter c)
                 {
                     critterCount++;
@@ -153,26 +121,25 @@ namespace Ecosystem_Simulator.UI
                 }
             }
 
-
-            float AverageCritterEnergy = critterCount > 0 ? sumCritterEnergy / critterCount : 0;
-            float AverageCritterSpeed = critterCount > 0 ? sumCritterSpeed / critterCount : 0;
-            float AverageCritterSightRadius = critterCount > 0 ? sumCritterSight / critterCount : 0;
-            float AverageCritterMetabolismEfficiency = critterCount > 0 ? sumCritterMetab / critterCount : 0;
-            float AverageCritterReproductionThreshold = critterCount > 0 ? sumCritterRepro / critterCount : 0;
-
-            float AveragePredatorEnergy = predatorCount > 0 ? sumPredatorEnergy / predatorCount : 0;
-            float AveragePredatorSpeed = predatorCount > 0 ? sumPredatorSpeed / predatorCount : 0;
-            float AveragePredatorSightRadius = predatorCount > 0 ? sumPredatorSight / predatorCount : 0;
-            float AveragePredatorMetabolismEfficiency = predatorCount > 0 ? sumPredatorMetab / predatorCount : 0;
-            float AveragePredatorReproductionThreshold = predatorCount > 0 ? sumPredatorRepro / predatorCount : 0;
-
             double lastLogTime = _historyList.Count > 0 ? _historyList.Last().Timestamp : -30; // -30 ensures it logs on frame 1
             _internalTimestamp +=Settings.TickRate;
-            
+
             if (_internalTimestamp - lastLogTime >= Settings.StatsSaveRate) // Save data every StatsSaveRate seconds, independent of TickRate (which can be changed for performance reasons and doesn't need to affect the stats logging)
             {
+                // calculate averages
+                float AverageCritterEnergy = critterCount > 0 ? sumCritterEnergy / critterCount : 0;
+                float AverageCritterSpeed = critterCount > 0 ? sumCritterSpeed / critterCount : 0;
+                float AverageCritterSightRadius = critterCount > 0 ? sumCritterSight / critterCount : 0;
+                float AverageCritterMetabolismEfficiency = critterCount > 0 ? sumCritterMetab / critterCount : 0;
+                float AverageCritterReproductionThreshold = critterCount > 0 ? sumCritterRepro / critterCount : 0;
+                float AveragePredatorEnergy = predatorCount > 0 ? sumPredatorEnergy / predatorCount : 0;
+                float AveragePredatorSpeed = predatorCount > 0 ? sumPredatorSpeed / predatorCount : 0;
+                float AveragePredatorSightRadius = predatorCount > 0 ? sumPredatorSight / predatorCount : 0;
+                float AveragePredatorMetabolismEfficiency = predatorCount > 0 ? sumPredatorMetab / predatorCount : 0;
+                float AveragePredatorReproductionThreshold = predatorCount > 0 ? sumPredatorRepro / predatorCount : 0;
+
                 _secondsElapsed += Settings.StatsSaveRate; // ensures timestamps saved are precise and consistent
-                StatsEntry history = new StatsEntry // data for graphs and csv files
+                StatsEntry EntityInfo = new StatsEntry // data for graphs and csv files
                 {
                     Timestamp = _secondsElapsed,
                     CritterCount = critterCount,
@@ -190,10 +157,10 @@ namespace Ecosystem_Simulator.UI
                     PredatorAvgReproductionThreshold = AveragePredatorReproductionThreshold
                 };
 
-                _historyList.Add(history);
-                _stats_manager.SaveStatsToCSV(_historyList);
-                _stats_manager.ExportToHTML(_historyList);
-            }
+                _historyList.Add(EntityInfo); // Add the new stats entry to the history list, which is used for both CSV and HTML exports. This way we keep a complete history of all the stats entries, and we can optimize the HTML export later to only update the latest entry instead of rewriting the whole file every time.
+                _stats_manager.RecordStatistics(EntityInfo);
+                HTMLExporter.ExportToHTML(_historyList); // Needs work, currently it just overwrites the same html file every time with the full history, which is inefficient and causes performance issues as the history grows. We need to either optimize the HTMLExporter to only update the data in the existing file without rewriting the whole thing, or we need to implement a different system for storing and accessing the stats data for graphing (like a lightweight database or in-memory data structure that the frontend can query). For now, we'll just rely on the CSV file for stats analysis and leave the HTMLExporter as a future improvement.
+            } 
 
             var frameData = new
             {
@@ -204,70 +171,14 @@ namespace Ecosystem_Simulator.UI
                 {
                     Critters = critterCount,
                     Predators = predatorCount,
-                    Food = foodCount,
-                    CEnergy = AverageCritterEnergy.ToString("N2"),
-                    CSpeed = AverageCritterSpeed.ToString("N2"),
-                    CSight = AverageCritterSightRadius.ToString("N2"),
-                    CMetab = AverageCritterMetabolismEfficiency.ToString("N2"),
-                    CRepro = AverageCritterReproductionThreshold.ToString("N2"),
-                    PEnergy = AveragePredatorEnergy.ToString("N2"),
-                    PSpeed = AveragePredatorSpeed.ToString("N2"),
-                    PSight = AveragePredatorSightRadius.ToString("N2"),
-                    PMetab = AveragePredatorMetabolismEfficiency.ToString("N2"),
-                    PRepro = AveragePredatorReproductionThreshold.ToString("N2")
-
+                    Food = foodCount
+                    // got rid of averages every frame to save CPU, we can get that data from the stats page if needed
                 },
                 Entities = exportEntities
             };
 
-
-            string rootPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", ".."));
-            string filePath = Path.Combine(rootPath, "world_state.json");
-            string tempFilePath = Path.Combine(rootPath, "world_state_temp.json");
-
-            //  Serialize data
+            //  Serialize data and send the frame data to all connected clients via SignalR, which is much more efficient than writing to a file every frame and having the frontend read from it. The frontend can just listen for "frame" events from the SignalR hub and update the visualization accordingly, which should result in a much smoother experience overall.
             string jsonString = JsonSerializer.Serialize(frameData);
-
-            //  Write to the temporary file first
-            File.WriteAllText(tempFilePath, jsonString);
-            
-            //  Swap the files instantly (the 'true' allows overwriting)
-            // This method prevents the frontend from ever trying to read the file while it's being written to, which can (happened to me alot) cause crashes or corrupted data
-            File.Move(tempFilePath, filePath, true);
-        }
-
-        
-
-        private void StartWebServer()
-        {
-            Task.Run(() => {
-                try {
-                    ProcessStartInfo startInfo = new ProcessStartInfo
-                    {
-                        FileName = "python3",
-                        Arguments = "-m http.server 8000",
-                        RedirectStandardOutput = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                        WorkingDirectory = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", ".."))
-                    };
-
-                    _webServerProcess = Process.Start(startInfo);
-                    Console.WriteLine("--- Internal Web Server Started on Port 8000 ---");
-                    
-                    // Ensure that if the C# app is killed, the Python app is killed too (or try to anyways, we don't want orphan processes)
-                    AppDomain.CurrentDomain.ProcessExit += (s, e) => _webServerProcess?.Kill();
-                    
-                    _webServerProcess.WaitForExit();
-                }
-                catch (Exception ex) {
-                    Console.WriteLine($"Web Server failed: {ex.Message}");
-                }
-            });
-        }
-    }
-
-    
-
-    
-}
+            await _hub.Clients.All.SendAsync("frame", frameData); 
+        }  
+}}

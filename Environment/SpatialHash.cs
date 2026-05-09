@@ -1,9 +1,6 @@
 ﻿using Ecosystem_Simulator.Core;
 using Ecosystem_Simulator.Core.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
-
+using Ecosystem_Simulator.Core.Structs;
 namespace Ecosystem_Simulator.Environment
 {
     public class SpatialHash
@@ -79,6 +76,8 @@ namespace Ecosystem_Simulator.Environment
                     if (_buckets.TryGetValue(key, out var bucket))
                     {
                         results.UnionWith(bucket);
+                        // Note: This will include entities that are outside the radius, but that's a common tradeoff for spatial hashes.
+
                     }
                 }
             }

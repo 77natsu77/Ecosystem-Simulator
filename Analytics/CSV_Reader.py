@@ -6,7 +6,7 @@ import os
 def read_csv_and_plot():
     #  Load the data from csv file
     export_dir = os.path.join(os.getcwd(), 'Exports')
-    df = pd.read_csv(os.path.join(export_dir, 'stats.csv'))
+    df = pd.read_csv(os.path.join(export_dir, 'Simulation stats.csv')) #Need to find a way to not hardcode this file name, maybe save the file name in a text file when saving the stats and read it here? or just always save the stats with the same name and overwrite it each time, since we only care about the most recent simulation stats for plotting
 
     #  Create a professional multi-plot figure
     fig, ax1 = plt.subplots()
@@ -18,8 +18,8 @@ def read_csv_and_plot():
 
     ax2 = ax1.twinx()
     ax2.set_ylabel('Avg Speed', color='tab:green')
-    ax2.plot(df['Timestamp'], df['AvgCritterSpeed'], label='Critter Speed', color='tab:green', linestyle='--')
-    ax2.plot(df['Timestamp'], df['AvgPredatorSpeed'], label='Predator Speed', color='tab:orange', linestyle='--')
+    ax2.plot(df['Timestamp'], df['CritterAvgSpeed'], label='Critter Speed', color='tab:green', linestyle='--')
+    ax2.plot(df['Timestamp'], df['PredatorAvgSpeed'], label='Predator Speed', color='tab:orange', linestyle='--')
 
     plt.title('Ecosystem Population vs. Evolutionary Traits')
     fig.legend(loc='upper left', bbox_to_anchor=(0.1, 0.9))

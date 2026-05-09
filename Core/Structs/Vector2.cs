@@ -1,4 +1,4 @@
-﻿namespace Ecosystem_Simulator.Core
+﻿namespace Ecosystem_Simulator.Core.Structs
 {
     public struct Vector2
     {

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Ecosystem_Simulator.Core;
+using Ecosystem_Simulator.Core.Structs;
 using Ecosystem_Simulator.Core.Interfaces;
 using Ecosystem_Simulator.Core.Policies;
 using Ecosystem_Simulator.Core.delegates;
@@ -26,6 +27,7 @@ public class Predator: IUpdatable, IMovable
     public float Energy { get; private set; }
     public bool IsPendingRemoval { get; private set; }
     public int Id { get; private set; } // Unique identifier for the critter, set in constructor
+    // Might change this as it checks energy every frame, which could be costly, but it is needed to determine if the predator should be in cannibal mode or not, which drastically changes its behavior and is a key part of the simulation, so I think it is worth it, especially since it is just a simple float comparison
     public bool CannibalMode => (this.Energy <= Settings.PredatorCannibalThreshold) ? true : false; //go cannibalistic if below certain energy
     public event SpawnRequestDelegate OnSpawnRequested;
 
@@ -49,8 +51,96 @@ public class Predator: IUpdatable, IMovable
     }
 
     public void Update(double deltaTime, IEnumerable<IEntity> nearbyEntities)
+        {
+            DetectCollisions(nearbyEntities);
+            if (!this.IsPendingRemoval)
+            {
+                ProcessStimuli(deltaTime, nearbyEntities);
+            }
+        }
+    public void SpawnChild()
     {
-        if (this.IsPendingRemoval) return;
+        float baby_energy = this.Energy * Settings.PredatorBirthEnergyShareRatio;
+        this.Energy -= baby_energy; 
+        
+        // Create new baby at parent position
+        Predator baby = new Predator(this.Position, new PredatorGenome(this.Speed,this.SightRadius,this.MetabolismEfficiency,this.ReproductionThreshold,true),baby_energy );
+
+        //  Trigger spawn event
+        OnSpawnRequested?.Invoke(baby);
+    }
+    public void InvertVelocityX()
+        {
+            Vector2 newVelocity = new Vector2();
+            newVelocity.X = -this.Velocity.X;
+            newVelocity.Y = this.Velocity.Y;
+            this.Velocity = newVelocity;
+            // Sync the wander angle to the new direction
+            _wanderAngle = (float)Math.Atan2(this.Velocity.Y, this.Velocity.X);
+        }
+    public void InvertVelocityY()
+        {
+            Vector2 newVelocity = new Vector2();
+            newVelocity.X = this.Velocity.X;
+            newVelocity.Y = -this.Velocity.Y;
+            this.Velocity = newVelocity;
+            // Sync the wander angle to the new direction
+            _wanderAngle = (float)Math.Atan2(this.Velocity.Y, this.Velocity.X);
+        }
+    public void ApplyMovement(double deltaTime)
+        {
+            Vector2 newPos = new Vector2();
+            newPos.X = (float)(this.Position.X + (this.Velocity.X * deltaTime));
+            newPos.Y = (float)(this.Position.Y + (this.Velocity.Y * deltaTime));
+            this.Position = newPos;
+        }
+
+    private void SteerTowards(Vector2 target)
+        {
+            float diffX = target.X - this.Position.X;
+            float diffY = target.Y - this.Position.Y;
+            float distance = (float)Math.Sqrt(diffX * diffX + diffY * diffY);
+
+            if (distance > 0.1f) // Avoid division by zero
+            {
+                // Normalize and scale by speed
+                float moveX = (diffX / distance) * this.Speed;
+                float moveY = (diffY / distance) * this.Speed;
+
+                this.Velocity = new Vector2(moveX, moveY);
+            }
+        }
+
+    public void DebugInfo()
+        {
+            Console.WriteLine($"Critter {Id} - Pos: ({Position.X:F2}, {Position.Y:F2}), Energy: {Energy:F2}, Speed: {Speed:F2}, Sight: {SightRadius:F2}");
+        }
+
+    public void DetectCollisions(IEnumerable<IEntity> nearbyEntities)
+        {
+            foreach (IEntity entity in nearbyEntities)
+            {
+                if (entity != this && entity is ICollidable collidable && !collidable.IsPendingRemoval)
+                {
+                    float dX = entity.Position.X - this.Position.X;
+                    float dY = entity.Position.Y - this.Position.Y;
+                    float distSq = (dX * dX) + (dY * dY);
+                    float collisionDistSq = Settings.CollisionDistance * Settings.CollisionDistance;
+
+                    if (distSq < collisionDistSq)
+                    {
+                        // Simple collision response: invert velocity
+                        InvertVelocityX();
+                        InvertVelocityY();
+                        break; // Only handle one collision per update for simplicity
+                    }
+                }
+            }
+        }
+
+    public void ProcessStimuli(double deltaTime, IEnumerable<IEntity> nearbyEntities)
+        {
+            if (this.IsPendingRemoval) return;
         List<IEntity> FoodOptions = new List <IEntity>();
         IEntity closestFood = null;
         float minDistanceSq = float.MaxValue;
@@ -59,7 +149,7 @@ public class Predator: IUpdatable, IMovable
         //loop through nearby entities and eat if close enough, sense closest food otherwise
         foreach (IEntity entity in nearbyEntities) // Detect stimuli and provide suitable response
         {
-            if (!entity.IsPendingRemoval)
+            if (entity != this && !entity.IsPendingRemoval)
             {
                 float dX = entity.Position.X - this.Position.X;
                 float dY = entity.Position.Y - this.Position.Y;
@@ -124,65 +214,20 @@ public class Predator: IUpdatable, IMovable
             this.IsPendingRemoval = true; 
             return;
         }
-
-    }
-
-    public void SpawnChild()
-    {
-        float baby_energy = this.Energy * Settings.PredatorBirthEnergyShareRatio;
-        this.Energy -= baby_energy; 
-        
-        // Create new baby at parent position
-        Predator baby = new Predator(this.Position, new PredatorGenome(this.Speed,this.SightRadius,this.MetabolismEfficiency,this.ReproductionThreshold,true),baby_energy );
-
-        //  Trigger spawn event
-        OnSpawnRequested?.Invoke(baby);
-    }
-    public void InvertVelocityX()
-        {
-            Vector2 newVelocity = new Vector2();
-            newVelocity.X = -this.Velocity.X;
-            newVelocity.Y = this.Velocity.Y;
-            this.Velocity = newVelocity;
-            // Sync the wander angle to the new direction
-            _wanderAngle = (float)Math.Atan2(this.Velocity.Y, this.Velocity.X);
-        }
-        public void InvertVelocityY()
-        {
-            Vector2 newVelocity = new Vector2();
-            newVelocity.X = this.Velocity.X;
-            newVelocity.Y = -this.Velocity.Y;
-            this.Velocity = newVelocity;
-            // Sync the wander angle to the new direction
-            _wanderAngle = (float)Math.Atan2(this.Velocity.Y, this.Velocity.X);
-        }
-        public void ApplyMovement(double deltaTime)
-        {
-            Vector2 newPos = new Vector2();
-            newPos.X = (float)(this.Position.X + (this.Velocity.X * deltaTime));
-            newPos.Y = (float)(this.Position.Y + (this.Velocity.Y * deltaTime));
-            this.Position = newPos;
         }
 
-        private void SteerTowards(Vector2 target)
+    public void ConsumeEnergy(float amount)
         {
-            float diffX = target.X - this.Position.X;
-            float diffY = target.Y - this.Position.Y;
-            float distance = (float)Math.Sqrt(diffX * diffX + diffY * diffY);
-
-            if (distance > 0.1f) // Avoid division by zero
+            this.Energy -= amount;
+            if (this.Energy <= 0)
             {
-                // Normalize and scale by speed
-                float moveX = (diffX / distance) * this.Speed;
-                float moveY = (diffY / distance) * this.Speed;
-
-                this.Velocity = new Vector2(moveX, moveY);
+                Death();
             }
         }
-
         
 
-        private void Wander(double deltaTime)
+
+    private void Wander(double deltaTime)
         {
             // Slightly change the angle every frame for a smooth "curving" motion
             _wanderAngle += (float)(Settings.Rng.NextDouble() * 0.5 - 0.25); // Small jitter
@@ -193,6 +238,6 @@ public class Predator: IUpdatable, IMovable
 
             this.Velocity = new Vector2(moveX, moveY);
         }
-        public void ForcePosition(Vector2 newPos) => this.Position = newPos;
-        public void Death() => this.IsPendingRemoval = true;
+    public void ForcePosition(Vector2 newPos) => this.Position = newPos;
+    public void Death() => this.IsPendingRemoval = true;
 }

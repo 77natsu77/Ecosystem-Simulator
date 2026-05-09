@@ -1,12 +1,11 @@
-﻿namespace Ecosystem_Simulator.Environment
+﻿using Ecosystem_Simulator.Core;
+using Ecosystem_Simulator.Core.Interfaces;
+using Ecosystem_Simulator.Core.Structs;
+using Ecosystem_Simulator.Entities;
+using System.Collections.Generic;
+
+namespace Ecosystem_Simulator.Environment
 {
-    using Ecosystem_Simulator.Core;
-    using Ecosystem_Simulator.Core.Interfaces;
-    using Ecosystem_Simulator.Core.Policies;
-    using Ecosystem_Simulator.Entities;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
 
     public class World
     {
@@ -26,8 +25,12 @@
         //Initializer 
         public World(float width, float height)
         {
-            _width = width;
-            _height = height;
+           // _width = width;
+           // _height = height;
+           _width = Settings.WorldWidth;
+            _height = Settings.WorldHeight;
+            _critterList = new List<Critter>();
+            _foodPelletList = new List<FoodPellet>();
         }
 
 
@@ -62,7 +65,7 @@
                 Vector2 oldPos = entity.Position;
 
                 //  Get the neighbors from the grid
-                IEnumerable<IEntity> neighbors = _grid.GetEntitiesInRadius(oldPos, Settings.CellSize);
+                IEnumerable<IEntity> neighbors = _grid.GetEntitiesInRadius(oldPos, Settings.CellSize); // Need to make a decision about wether to remove the entity itself from the neighbors list or just let the entity ignore itself in its logic. For now, we'll just let them ignore themselves, but it might be worth changing later for performance reasons.
 
                 //  Pass them to the entity 
                 entity.Update(deltaTime, neighbors);

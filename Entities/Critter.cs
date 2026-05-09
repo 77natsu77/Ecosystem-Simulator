@@ -2,8 +2,7 @@
 using Ecosystem_Simulator.Core.delegates;
 using Ecosystem_Simulator.Core.Interfaces;
 using Ecosystem_Simulator.Core.Policies;
-using System;
-using System.Collections.Generic;
+using Ecosystem_Simulator.Core.Structs;
 namespace Ecosystem_Simulator.Entities
 {
     public class Critter : IUpdatable, IMovable
@@ -46,9 +45,44 @@ namespace Ecosystem_Simulator.Entities
             this.Velocity = new Vector2((float)Math.Cos(angle) * this.Speed, (float)Math.Sin(angle) * this.Speed);
         }
 
+        public void DebugInfo()
+        {
+            Console.WriteLine($"Critter {Id} - Pos: ({Position.X:F2}, {Position.Y:F2}), Energy: {Energy:F2}, Speed: {Speed:F2}, Sight: {SightRadius:F2}");
+        }
+
+        public void DetectCollisions(IEnumerable<IEntity> nearbyEntities)
+        {
+            foreach (IEntity entity in nearbyEntities)
+            {
+                if (entity != this && entity is ICollidable collidable && !collidable.IsPendingRemoval)
+                {
+                    float dX = entity.Position.X - this.Position.X;
+                    float dY = entity.Position.Y - this.Position.Y;
+                    float distSq = (dX * dX) + (dY * dY);
+                    float collisionDistSq = Settings.CollisionDistance * Settings.CollisionDistance;
+
+                    if (distSq < collisionDistSq)
+                    {
+                        // Simple collision response: invert velocity
+                        InvertVelocityX();
+                        InvertVelocityY();
+                        break; // Only handle one collision per update for simplicity
+                    }
+                }
+            }
+        }
+
         public void Update(double deltaTime, IEnumerable<IEntity> nearbyEntities)
         {
-            if (this.IsPendingRemoval) return;
+            DetectCollisions(nearbyEntities);
+            if (!this.IsPendingRemoval)
+            {
+                ProcessStimuli(deltaTime, nearbyEntities);
+            }
+        }
+
+        public void ProcessStimuli(double deltaTime, IEnumerable<IEntity> nearbyEntities)
+        {
             IEatable closestFood = null;
             float minDistanceSq = float.MaxValue;
             float eatDistSq = Settings.CritterEatDistance * Settings.CritterEatDistance;
@@ -61,7 +95,7 @@ namespace Ecosystem_Simulator.Entities
                     float dX = entity.Position.X - this.Position.X;
                     float dY = entity.Position.Y - this.Position.Y;
                     float distSq = (dX * dX) + (dY * dY);
-                    // Very complex logic incoming, brace yourself
+                    // Very complex logic incoming, brace yourself!
                     // ACTION 1: EATING
                     if (distSq < eatDistSq)
                     {
@@ -91,24 +125,25 @@ namespace Ecosystem_Simulator.Entities
             {
                 Wander(deltaTime); // Keep moving if nothing is found
             }
-
+            // Apply movement and consume energy for existing before checking for reproduction to ensure critters don't reproduce on the same frame they eat
             ApplyMovement(deltaTime);
-            this.Energy -= _metabolism.CalculateLoss(this.Velocity,this.SightRadius, deltaTime);
+            ConsumeEnergy(_metabolism.CalculateLoss(this.Velocity, this.SightRadius, deltaTime));
 
             if (this.Energy >= ReproductionThreshold) 
             { 
                 SpawnChild();
             }
+        }
 
+        public void ConsumeEnergy(float amount)
+        {
+            this.Energy -= amount;
             if (this.Energy <= 0)
             {
                 Death();
-                return;
             }
-
-           
         }
-
+        
         public void SpawnChild()
         {
             float baby_energy = this.Energy * Settings.CritterBirthEnergyShareRatio;
@@ -120,8 +155,6 @@ namespace Ecosystem_Simulator.Entities
             //  Trigger spawn event
             OnSpawnRequested?.Invoke(baby);
         }
-
-
 
         public float CalculateDistance(Vector2 A, Vector2 B)// Move this into vector struct?
         {
@@ -170,9 +203,7 @@ namespace Ecosystem_Simulator.Entities
 
                 this.Velocity = new Vector2(moveX, moveY);
             }
-        }
-
-        
+        } 
 
         private void Wander(double deltaTime)
         {

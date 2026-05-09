@@ -10,6 +10,7 @@
         .stable { color: limegreen; font-weight: bold; }
         .extinct { color: red; font-weight: bold; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@latest/dist/browser/signalr.min.js"></script>
 </head>
 <body>
     <canvas id="simCanvas" width="1200" height="800"></canvas>
@@ -69,12 +70,16 @@
                 document.getElementById('entity-details').innerText = "Click an entity to inspect...";
             }
         });
-        async function fetchAndUpdate() {
-            try {
-                const response = await fetch('world_state.json?t=' + new Date().getTime());
-                console.log("Fetched world state at " + new Date().toLocaleTimeString());
-                const data = await response.json();
-                console.log("Parsed world state:", data);
+
+       
+
+        const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/worldHub")
+        .build();
+
+        connection.on("frame", data => {
+
+            console.log("Parsed world state:", data);
                 // Update Canvas Size dynamically if needed (based on world dimensions)
                 canvas.width = data.Width;
                 canvas.height = data.Height;
@@ -174,14 +179,12 @@
 
                     ctx.stroke();
                     ctx.restore();
-                }
-            }
-            );
+                }});
+
             updateInspector();
-            } catch (err) { console.error("Error fetching or processing data:", err); }
-            
-            requestAnimationFrame(fetchAndUpdate); // Loop as fast as browser allows
-        }
+        });
+
+connection.start().catch(err => console.error(err));
 
         function drawArrow(x, y, vx, vy, sight, color) {
             if (vx === 0 && vy === 0) return;
@@ -231,8 +234,6 @@
                 selectedEntityId = null;
             }
         }
-
-        fetchAndUpdate();
     </script>
 </body>
 </html>

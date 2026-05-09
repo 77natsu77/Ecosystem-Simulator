@@ -1,4 +1,5 @@
-﻿namespace Ecosystem_Simulator.Core.Interfaces
+﻿using Ecosystem_Simulator.Core.Structs;
+namespace Ecosystem_Simulator.Core.Interfaces
 {
     public interface IEnergyPolicy
     {

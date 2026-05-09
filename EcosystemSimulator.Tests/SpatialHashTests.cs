@@ -2,10 +2,7 @@ using Ecosystem_Simulator.Core;
 using Ecosystem_Simulator.Core.Interfaces;
 using Ecosystem_Simulator.Entities;
 using Ecosystem_Simulator.Environment;
-using System.Collections.Generic;
-using System.Linq;
-using Xunit;
-
+using Ecosystem_Simulator.Core.Structs;
 namespace EcosystemSimulator.Tests
 {
     /// <summary>

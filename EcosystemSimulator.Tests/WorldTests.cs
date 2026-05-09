@@ -1,9 +1,8 @@
 using Ecosystem_Simulator.Core;
-using Ecosystem_Simulator.Core.Interfaces;
+using Ecosystem_Simulator.Core.Structs;
 using Ecosystem_Simulator.Entities;
 using Ecosystem_Simulator.Environment;
-using System.Linq;
-using Xunit;
+
 
 namespace EcosystemSimulator.Tests
 {
