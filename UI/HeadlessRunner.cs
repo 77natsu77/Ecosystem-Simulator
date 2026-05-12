@@ -49,6 +49,7 @@ namespace Ecosystem_Simulator.UI
                 try
                 {
                     _world.Tick(Settings.TickRate);
+                   // Console.WriteLine($"Tick: {_internalTimestamp:F2}s, Entities: {_world.Entities.Count}");
                     ProcessFrame(); // fire-and-forget is ok for 20 FPS
                 }
                 catch (Exception ex)
@@ -93,6 +94,25 @@ namespace Ecosystem_Simulator.UI
                         Sight = c.SightRadius, VelX = c.Velocity.X, VelY = c.Velocity.Y, Speed = c.Speed, Energy = c.Energy
                     });
                 }
+                else if (entity is Smarty s)
+                {
+                    //TODO: must correct this later
+                    critterCount++;
+                    sumCritterEnergy += s.Energy;
+                    sumCritterSpeed += s.Speed;
+                    sumCritterSight += s.SightRadius;
+                    sumCritterMetab += s.MetabolismEfficiency;
+                    sumCritterRepro += s.ReproductionThreshold;
+                    float eRatio = Math.Clamp(s.Energy * invCritterEnergy, 0, 1);
+                    
+                    exportEntities.Add(new EntityExportDTO {
+                        Id = s.Id,
+                        Type = "Smarty", X = s.Position.X, Y = s.Position.Y,
+                        Size = 4 + (eRatio * 8), R = (int)((1 - eRatio) * 255), G = 120, B = (int)(eRatio * 255),
+                        Sight = s.SightRadius, VelX = s.Velocity.X, VelY = s.Velocity.Y, Speed = s.Speed, Energy = s.Energy,
+                        IsScanning = s.IsScanning
+                    });
+                }
                 else if (entity is Predator p)
                 {
                     predatorCount++;
@@ -106,8 +126,9 @@ namespace Ecosystem_Simulator.UI
                     exportEntities.Add(new EntityExportDTO {
                         Id = p.Id,
                         Type = "Predator", X = p.Position.X, Y = p.Position.Y,
-                        Size = 3 + (eRatio * 7), R = (int)((1 - eRatio) * 255), G = 150, B = (int)(eRatio * 255),
+                        Size = 3 + (eRatio * 7), R = (int)(255), G = (int)((1 - eRatio) * 255), B = (int)(eRatio * 255),
                         Sight = p.SightRadius, Cannibal = p.CannibalMode, VelX = p.Velocity.X, VelY = p.Velocity.Y, Speed = p.Speed, Energy = p.Energy
+                        
                     });
                 }
                 else if (entity is FoodPellet f)

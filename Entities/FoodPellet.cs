@@ -48,6 +48,6 @@ namespace Ecosystem_Simulator.Entities
             }
         }
 
-        public void Consume() => IsPendingRemoval = true;
+        public float Consume() { IsPendingRemoval = true; return EnergyValue; } // Mark for removal and return energy value when consumed
     }
 }

@@ -16,6 +16,7 @@ namespace Ecosystem_Simulator.Core.Structs
         public float VelY { get; set; }
         public float Speed { get; set; }
         public bool Cannibal { get; set; }
+        public bool IsScanning { get; set; } // Added: To indicate if a Smarty is currently performing a scan, which can be used to change its appearance in the frontend (e.g., color or brightness) to visually distinguish when it's actively scanning for targets versus when it's just idling or following a path.
         public float Energy { get; set; }   // Added: To show in the inspector
         public float MetabolismEfficiency { get; set; } // Added: To show in the inspector
         public float ReproductionThreshold { get; set; } // Added: To show in the inspector

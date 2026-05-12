@@ -23,7 +23,7 @@ namespace Ecosystem_Simulator
             builder.Services.AddSingleton<World>(sp =>
             {
                 var w = new World(Settings.WorldWidth, Settings.WorldHeight);
-                w.Seed(Settings.InitialCritterNumber, Settings.InitialPredatorNumber, Settings.InitialFoodPelletNumber);
+                w.Seed(Settings.InitialCritterNumber,Settings.InitialSmartyNumber, Settings.InitialPredatorNumber, Settings.InitialFoodPelletNumber);
                 return w;
             });
 

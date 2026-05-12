@@ -79,7 +79,7 @@
 
         connection.on("frame", data => {
 
-            console.log("Parsed world state:", data);
+           // console.log("Parsed world state:", data);
                 // Update Canvas Size dynamically if needed (based on world dimensions)
                 canvas.width = data.Width;
                 canvas.height = data.Height;
@@ -89,7 +89,7 @@
                 document.getElementById('s-critters').innerText = data.Stats.Critters;
                 document.getElementById('s-preds').innerText = data.Stats.Predators;
                 document.getElementById('s-food').innerText = data.Stats.Food;
-                console.log("Updating UI with stats:", data.Stats);
+               // console.log("Updating UI with stats:", data.Stats);
                 const cStatus = document.getElementById('s-c-status');
                 cStatus.innerText = data.Stats.Critters > 0 ? "STABLE" : "EXTINCT";
                 cStatus.className = data.Stats.Critters > 0 ? "stable" : "extinct";
@@ -120,6 +120,23 @@
                         ctx.fillStyle = `rgb(${e.R}, ${e.G}, ${e.B})`;
                         ctx.beginPath();
                         ctx.arc(e.X, e.Y, e.Size / 2, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Velocity Arrow
+                        if (data.ShowArrows) drawArrow(e.X, e.Y, e.VelX, e.VelY, e.Sight, "black");
+                    }
+                    else if (e.Type === "Smarty") {
+                        // Sight Radius (Brighter if currently scanning, dimmer if just following path or idling)
+                        ctx.fillStyle = e.IsScanning ? "rgba(0, 255, 255, 0.12)" : "rgba(128, 128, 255, 0.12)";
+                        ctx.beginPath();
+                        ctx.arc(e.X, e.Y, e.Sight, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // square to distinguish from critters, also looks cool
+                        ctx.save();
+                        ctx.fillStyle = `rgb(${e.R}, ${e.G}, ${e.B})`;
+                        ctx.beginPath();
+                        ctx.rect(e.X - e.Size/2, e.Y - e.Size/2, e.Size, e.Size);
                         ctx.fill();
 
                         // Velocity Arrow

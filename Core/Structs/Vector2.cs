@@ -18,7 +18,11 @@
 
         // Division: Vector / Scalar (scaling down)
         public static Vector2 operator /(Vector2 a, float b) => new Vector2(a.X / b, a.Y / b);
+        public static bool operator ==(Vector2 a, Vector2 b) => a.X == b.X && a.Y == b.Y;
+        public static bool operator !=(Vector2 a, Vector2 b) => !(a == b);
 
         public float Length => (float)Math.Sqrt(X * X + Y * Y);
+
+        public static float Distance(Vector2 a, Vector2 b) => (a - b).Length;
     }
 }

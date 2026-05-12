@@ -119,7 +119,7 @@ namespace Ecosystem_Simulator.Environment
             }
         }
 
-        public void Seed(int critterCount, int predatorCount, int foodCount)
+        public void Seed(int critterCount,int smartyCount, int predatorCount, int foodCount)
         {
 
             //  Spawn Critters
@@ -129,6 +129,11 @@ namespace Ecosystem_Simulator.Environment
                 CritterGenome genome = new CritterGenome();
                 Vector2 pos = new Vector2(Settings.Rng.Next(0, (int)_width), Settings.Rng.Next(0, (int)_height));
                 Spawn(new Critter(pos, genome));
+            }
+            for (int l = 0; l < smartyCount; l++){
+                SmartyGenome genome = new SmartyGenome();
+                Vector2 pos = new Vector2(Settings.Rng.Next(0, (int)_width), Settings.Rng.Next(0, (int)_height));
+                Spawn(new Smarty(pos, genome));
             }
             // Spawn Predators
             for (int k = 0; k < predatorCount; k++)

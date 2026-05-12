@@ -38,16 +38,18 @@ namespace EcosystemSimulator.Tests
             int expectedCritters = Settings.InitialCritterNumber;
             int expectedPredators = Settings.InitialPredatorNumber;
             int expectedFood = Settings.InitialFoodPelletNumber;
-            int expectedTotal = expectedCritters + expectedPredators + expectedFood;
+            int expectedSmarties = Settings.InitialSmartyNumber;
+            int expectedTotal = expectedCritters + expectedPredators + expectedFood + expectedSmarties;
 
             // ACT
-            world.Seed(expectedCritters, expectedPredators, expectedFood);
+            world.Seed(expectedCritters, expectedSmarties, expectedPredators, expectedFood);
 
             // ASSERT
             Assert.Equal(expectedTotal, world.Entities.Count());
             
             // Verify correct types were spawned
             int actualCritters = world.Entities.OfType<Critter>().Count();
+            int actualSmarties = world.Entities.OfType<Smarty>().Count();
             int actualPredators = world.Entities.OfType<Predator>().Count();
             int actualFood = world.Entities.OfType<FoodPellet>().Count();
             
@@ -88,7 +90,7 @@ namespace EcosystemSimulator.Tests
         {
             // ARRANGE: Create world with critters and food
             World world = new World(800f, 600f);
-            world.Seed(critterCount: 5, predatorCount: 3, foodCount: 10);
+            world.Seed(critterCount: 5, smartyCount: 5, predatorCount: 3, foodCount: 10);
 
             // Get initial positions
             var initialPositions = world.Entities.OfType<Critter>()
