@@ -9,6 +9,7 @@ namespace Ecosystem_Simulator.Environment
 
     public class World
     {
+        // TODO make a new version of the current entity list as currently, iterating through each entity, which has to iterate through multiple entities as well to get neighbors, is very inefficient. We need to make a new list of entities that only contains the entities that are relevant to the current entity being updated, and then pass that list to the entity instead of the entire list of entities in the world. This will require some changes to the way we handle the spatial hash and how we store entities in the world, but it will be worth it for the performance boost. For now, we'll just have to deal with the inefficiency, but this is definitely something we need to address in the future.
         private readonly SpatialHash _grid = new SpatialHash();
 
         // This holds every active entity in the simulation
@@ -23,12 +24,10 @@ namespace Ecosystem_Simulator.Environment
         private List<IUpdatable> _spawnQueue = new List<IUpdatable>();
 
         //Initializer 
-        public World(float width, float height)
+        public World(float width = Settings.WorldWidth , float height = Settings.WorldHeight)
         {
-           // _width = width;
-           // _height = height;
-           _width = Settings.WorldWidth;
-            _height = Settings.WorldHeight;
+            _width = width;
+            _height = height;
             _critterList = new List<Critter>();
             _foodPelletList = new List<FoodPellet>();
         }

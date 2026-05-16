@@ -10,8 +10,8 @@ namespace Ecosystem_Simulator.Core
         public static readonly Random Rng = new Random();
 
         // WORLD SETTINGS
-        public const float WorldWidth = 2300f;
-        public const float WorldHeight = 1700f;
+        public const float WorldWidth = 1000f;
+        public const float WorldHeight = 1000f;
 
         // GRID SETTINGS
         public const float CellSize = 150f;
@@ -43,7 +43,7 @@ namespace Ecosystem_Simulator.Core
         public const string PredatorPopulationColor = "#000000"; // Black
 
         // other save file settings
-        public const int StatsSaveRate = 10; // seconds, the rate at which data is saved to files(this does not include world data which is saved at the very end)
+        public const int StatsSaveRate = 100000000; // seconds, the rate at which data is saved to files(this does not include world data which is saved at the very end)
         
         //UI SETTINGS
         public const double TickRate = 0.05; // changing fps to around 20 as opposed to 60 makes the simulation run much smoother and more stable, especially as the population grows and there are more entities to process each frame. It also reduces the CPU load significantly, which is important for keeping the simulation running smoothly on a wider range of hardware. Plus, with the real-time updates to the frontend using SignalR, we can still have a visually appealing and responsive experience even at a lower tick rate.
@@ -56,10 +56,10 @@ namespace Ecosystem_Simulator.Core
         public const float BaseMetabolism = 1.67f;
 
         // INITIALIZATION SETTINGS
-        public const int InitialCritterNumber = 60;
-        public const int InitialPredatorNumber = 15;
-        public const int InitialFoodPelletNumber = 500;
-        public const int InitialSmartyNumber = 3;
+        public const int InitialCritterNumber = 10;
+        public const int InitialPredatorNumber = 5;
+        public const int InitialFoodPelletNumber = 10;
+        public const int InitialSmartyNumber = 2;
         
 
         // ENTITIES SETTINGS
@@ -153,10 +153,10 @@ namespace Ecosystem_Simulator.Core
         public const float SmartySafetyPulseTime = SmartyScanDuration * 0.9f; // the time at which the smarty will perform its safety pulse during the scan, this is when the smarty will check if there are any predators near its current path and adjust its path if necessary to avoid them, this is important to ensure that the smarties are able to find their way to their targets even in complex environments with many obstacles and predators, without making the safety pulse so early that it doesn't have enough information about its surroundings, or so late that it leaves the smarty vulnerable to predators or starvation, this also creates interesting dynamics as the smarty evolves, since it will need to balance the energy it invests in finding optimal paths and avoiding predators with the energy it needs to sustain itself and reproduce, which creates a trade-off that the smarty will need to navigate as it evolves, this also allows us to see how the smarty evolves differently from the other entities in the ecosystem, since it has a unique set of challenges and advantages based on its behavior and reproduction mechanism
 
         // FOODPELLET SETTINGS //
-        public const float FoodPelletRateOfReproduction = 2f; // seconds
-        public const int FoodPelletMaxNumberPerRegion = 80; // if the number of pellets around it exceeds this number, no more reproduction will occur
-        public const float FoodPelletEnergyValue = 150f;
-        public const float FoodPelletSpreadAmount = 150f; // the maximum distance from the parent pellet that a new pellet can spawn, this creates a more natural spread of food pellets across the world instead of them all clumping up in the same spot
+        public const float FoodPelletRateOfReproduction = 5f; // seconds
+        public const int FoodPelletMaxNumberPerRegion = 50; // if the number of pellets around it exceeds this number, no more reproduction will occur
+        public const float FoodPelletEnergyValue = 100f;
+        public const float FoodPelletSpreadAmount = 750f; // the maximum distance from the parent pellet that a new pellet can spawn, this creates a more natural spread of food pellets across the world instead of them all clumping up in the same spot
 
         // Utility functions
         /// <summary>

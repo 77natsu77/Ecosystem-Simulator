@@ -23,9 +23,11 @@ namespace Ecosystem_Simulator.Entities
 
         public void Update(double deltaTime, IEnumerable<IEntity> nearby)
         {
+            //TODO refine this logic as each food pellet needs to scan hundreds of entities every frame, and with this at O(n), the efficiency is terrible
             _age += deltaTime;
 
             // Reproduce if old enough and not too crowded
+            if (_age > 20) IsPendingRemoval = true; // TODO remove hard coded death age, we add this to ensure food doesnt become too much and cause system to lag
             if (_age > Settings.FoodPelletRateOfReproduction)
             {
                 _age = 0;
