@@ -80,16 +80,29 @@ namespace Ecosystem_Simulator.Entities
             }
         }
 
-        
-        public virtual void ProcessStimuli(double deltaTime, IEnumerable<IEntity> nearbyEntities)
+        public virtual void DecideAction(double deltaTime, Vector2 target)
         {
-            IEatable closestFood = null;
+            // This method can be overridden by child classes to implement specific decision-making logic based on the stimuli detected in the ProcessStimuli method. For example, a Predator class might override this method to implement logic for chasing prey, while a Critter class might override it to implement logic for avoiding predators or seeking mates. By separating the decision-making logic into its own method, we can keep the code organized and make it easier to maintain and extend in the future as we add more complex behaviors and interactions between entities.
+            if (target != Vector2.Zero)
+            {
+                SteerTowards(target);
+            }
+            else
+            {
+                Wander(deltaTime); // Keep moving if nothing is found
+            }
+        }
+
+        public virtual void SenseSurroundings(IEnumerable<IEntity> nearbyEntities, ref IEatable closestFood)
+        {
+            // This method can be overridden by child classes to implement specific sensing logic for different types of entities. For example, a Predator class might override this method to implement logic for detecting nearby prey, while a Critter class might override it to implement logic for detecting nearby predators or mates. By separating the sensing logic into its own method, we can keep the code organized and make it easier to maintain and extend in the future as we add more complex behaviors and interactions between entities.
             float minDistanceSq = float.MaxValue;
             float eatDistSq = _eatDistance * _eatDistance;
             float sightRadiusSq = SightRadius * SightRadius;
 
             foreach (IEntity entity in nearbyEntities) // Detect stimuli and provide suitable response
             {
+                // TODO SPLIT UP INTO DIFFERENT FUNCTIONS FOR EATING NEARBY AND SELECTING CLOSEST FOOD
                 if (entity is IEatable food && !food.IsPendingRemoval)
                 {
                     float dX = entity.Position.X - this.Position.X;
@@ -114,24 +127,27 @@ namespace Ecosystem_Simulator.Entities
                     }
                 }
             }
+        }
 
-            // DECISION PHASE
-            if (closestFood != null)
-            {
-                SteerTowards(closestFood.Position);
-            }
-            else
-            {
-                Wander(deltaTime); // Keep moving if nothing is found
-            }
-            // Apply movement and consume energy for existing before checking for reproduction to ensure animals don't reproduce on the same frame they eat
-            ApplyMovement(deltaTime);
-            ConsumeEnergy(_metabolism.CalculateLoss(this.Velocity, this.SightRadius, deltaTime));
-
+        public virtual void ProcessStimuli(double deltaTime, IEnumerable<IEntity> nearbyEntities)
+        {
+            // Decided to split up into sensing, deciding and acting to further decouple the logic and make it easier to maintain and extend in the future as we add more complex behaviors and interactions between entities. 
+            IEatable closestFood = null;
             if (this.Energy >= ReproductionThreshold) 
             { 
                 SpawnChild();
+                return; // return early to reduce computation, cheap exits are the best kind of exits >:)
             }
+
+            SenseSurroundings(nearbyEntities, ref closestFood);
+
+            // DECISION PHASE
+            DecideAction(deltaTime, closestFood?.Position ?? Vector2.Zero);
+
+            //ACTION PHASE
+            // Apply movement and consume energy for existing before checking for reproduction to ensure animals don't reproduce on the same frame they eat
+            ApplyMovement(deltaTime);
+            ConsumeEnergy(_metabolism.CalculateLoss(this.Velocity, this.SightRadius, deltaTime));
         }
 
         public void ConsumeEnergy(float amount)
@@ -204,7 +220,7 @@ namespace Ecosystem_Simulator.Entities
         }
 
         // This method allows child classes to trigger the event
-    protected virtual void OnOnSpawnRequested(IEntity childEntity)
+    protected virtual void RequestSpawn(IEntity childEntity)
     {
        OnSpawnRequested?.Invoke(childEntity);
     }

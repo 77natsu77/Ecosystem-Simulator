@@ -10,19 +10,18 @@ namespace Ecosystem_Simulator.Environment
     public class World
     {
         // TODO make a new version of the current entity list as currently, iterating through each entity, which has to iterate through multiple entities as well to get neighbors, is very inefficient. We need to make a new list of entities that only contains the entities that are relevant to the current entity being updated, and then pass that list to the entity instead of the entire list of entities in the world. This will require some changes to the way we handle the spatial hash and how we store entities in the world, but it will be worth it for the performance boost. For now, we'll just have to deal with the inefficiency, but this is definitely something we need to address in the future.
-        private readonly SpatialHash _grid = new SpatialHash();
-
-        // This holds every active entity in the simulation
-        // might make it public with get and private set, along with width and height
-        public List<IUpdatable> Entities {get; private set;} = new List<IUpdatable>();
-        public readonly List<Critter> _critterList;
-        public readonly List<FoodPellet> _foodPelletList;
+        private readonly SpatialHash _grid = new SpatialHash(); // This is the spatial hash grid that we will use to efficiently find neighbors for each entity. It will divide the world into a grid of cells and keep track of which entities are in which cells, so that when we need to find neighbors for an entity, we can just look at the cells around it instead of having to iterate through every entity in the world. This should significantly improve performance, especially as the number of entities in the world grows.
+        public List<IUpdatable> Entities {get; private set;} = new List<IUpdatable>(); // This is the main list of entities in the world, which will be used for updating and rendering. It will contain all the entities in the world, including critters, predators, food pellets, and any other entities we might add in the future. We will need to iterate through this list every tick to update each entity, so it is important that we keep it organized and efficient. We will also need to make sure that we update the spatial hash grid whenever we add or remove entities from this list, so that we can maintain the efficiency of our neighbor-finding logic.
         private readonly float _width;
-        public float Width => _width;
         private readonly float _height;
-        public float Height => _height;
+       
         private List<IUpdatable> _spawnQueue = new List<IUpdatable>();
-
+        private readonly StatisticsManager _statisticsManager;
+        private SnapshotBuilder _snapshotBuilder;
+        public float Width => _width;
+        public float Height => _height;
+        
+        
         //Initializer 
         public World(float width = Settings.WorldWidth , float height = Settings.WorldHeight)
         {
@@ -30,6 +29,8 @@ namespace Ecosystem_Simulator.Environment
             _height = height;
             _critterList = new List<Critter>();
             _foodPelletList = new List<FoodPellet>();
+            _statisticsManager = new StatisticsManager();
+            _snapshotBuilder = new SnapshotBuilder(this, _statisticsManager);
         }
 
 
@@ -58,6 +59,15 @@ namespace Ecosystem_Simulator.Environment
 
         public void Tick(double deltaTime)
         {
+            /*New logic to be implemented
+            -Clear export entity list at start of tick
+            -for each entity, depending on the type call a specific function to add an entity to the export list
+            e.g AddCritterExportData and so on
+            -Then we will use the log time to check if stats nees to be saved to the csv, upon which we will calc all  the averages and such
+            -frame data, which includes entity export data as well as some stats, will be returned from the snapshot and passed into the process frame function headless runner
+            - the total population data will be sent to the front end by the headless runner every frame to be displayed on the screen, while the more detailed stats will be saved to the csv for later analysis. This way, we can have real-time updates on the population counts and such in the frontend without having to worry about the performance issues of calculating all the averages and such every frame, while still having access to that data for analysis after the simulation is done.
+            -this new structure furthers the decoupling of the world logic from the frontend rendering, the first of many changes to come;*/
+            _snapshotBuilder.exportEntities.Clear();
             foreach (IUpdatable entity in Entities)
             {
                 // Save old position before update for spatial hash update later
@@ -74,6 +84,28 @@ namespace Ecosystem_Simulator.Environment
 
                 //  Update the spatial registry
                 _grid.UpdateEntityPosition(entity, oldPos);
+            
+                // add entity to export list for rendering
+                // update stats 
+                if (entity is Critter c)                {
+                    _snapshotBuilder.CritterAddExportData(c);
+                    _statisticsManager.IncrementCritterStats(c);
+                }
+                else if (entity is Predator p)
+                {
+                    _snapshotBuilder.PredatorAddExportData(p);
+                    _statisticsManager.IncrementPredatorStats(p);
+                }
+                else if (entity is Smarty s)
+                {
+                    _snapshotBuilder.SmartyAddExportData(s);
+                    _statisticsManager.IncrementSmartyStats(s);
+                }
+                else if (entity is FoodPellet f)
+                {
+                    _snapshotBuilder.FoodAddExportData(f);
+                    _statisticsManager.IncrementFoodStats();
+                }
             }
 
             // Cleanup Loop
@@ -148,5 +180,30 @@ namespace Ecosystem_Simulator.Environment
                 Spawn(new FoodPellet(pos));
             }
         }
+    
+        // Creating a new snapshot method which runs once per tick and creates a snapshot of the world state that can be used for rendering and analysis. This way, we can decouple the simulation logic from the rendering logic and avoid any potential performance issues caused by rendering during the simulation update loop. The snapshot will contain all the necessary information about the entities in the world, such as their positions, types, and any other relevant data that we want to include for rendering or analysis purposes.
+        public FrameData CreateSnapshot()
+        {
+            return new FrameData
+            {
+                Width = _world.Width,
+                Height = _world.Height,
+                ShowArrows = Settings.DISPLAY_VELOCITY_ARROWS,
+                Stats = new PopulationStats // This is the data that gets sent to the frontend every frame to be displayed on screen
+                {
+                    CritterCount = _statisticsManager.CritterCount,
+                    PredatorCount = _statisticsManager.PredatorCount,
+                    SmartyCount = _statisticsManager.SmartyCount,
+                    FoodCount = _statisticsManager.FoodCount
+
+                    // got rid of averages every frame to save CPU, we can get that data from the stats page if needed
+                },
+                Entities = exportEntities
+            };
+
+        }
+    
+  
+        
     }
 }

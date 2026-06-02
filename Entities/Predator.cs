@@ -46,7 +46,7 @@ public class Predator: AnimalEntityTemplate
         Predator baby = new Predator(this.Position, new PredatorGenome(this.Speed,this.SightRadius,this.MetabolismEfficiency,this.ReproductionThreshold,true),baby_energy );
 
         //  Trigger spawn event
-        OnOnSpawnRequested(baby);
+        RequestSpawn(baby);
     }
    
 
@@ -55,14 +55,9 @@ public class Predator: AnimalEntityTemplate
             Console.WriteLine($"Predator {Id} - Pos: ({Position.X:F2}, {Position.Y:F2}), Energy: {Energy:F2}, Speed: {Speed:F2}, Sight: {SightRadius:F2}");
         }
 
-
-        
-
-    public override void ProcessStimuli(double deltaTime, IEnumerable<IEntity> nearbyEntities) // makeing it so that they can only eat other animal entities
-        {
-            if (this.IsPendingRemoval) return;
-        List<IEntity> FoodOptions = new List <IEntity>();
-        IEntity closestFood = null;
+    // Overiding this to implement canibal logic specific to predators
+    public override void SenseSurroundings(IEnumerable<IEntity> nearbyEntities, ref IEatable closestFood)
+    {
         float minDistanceSq = float.MaxValue;
         float eatDistSq = _eatDistance * _eatDistance;
         float sightRadiusSq = SightRadius * SightRadius;
@@ -75,24 +70,26 @@ public class Predator: AnimalEntityTemplate
                 float dY = entity.Position.Y - this.Position.Y;
                 float distanceSq = dX * dX + dY * dY;
 
+                // ACTION 1: EATING
                 if (distanceSq < eatDistSq)
                 {
-                    if (entity is Predator p && this.CannibalMode && p != this)
+                    if (entity is Predator p && this.CannibalMode)
                     {
                         p.Death();
                         this.Energy += p.Energy * Settings.PredatorEnergyGainFromConsumption; // For simplicity, using the same energy gain for cannibalism as for eating critters, but this could be adjusted to be different if needed
                     }
-                    if (entity is AnimalEntityTemplate a && a != this) // Can eat any other animal entity, including other predators if in cannibal mode
+                    else if (entity is AnimalEntityTemplate a) // Can eat any other animal entity, including other predators if in cannibal mode
                    {
-                        //take energy and kill critter
                         a.Death();
                         this.Energy += a.Energy * Settings.PredatorEnergyGainFromConsumption;
                    }
                      
                 }
+
+                // ACTION 2: SENSING FOOD (Only if hungry)
                 else if (distanceSq < sightRadiusSq && distanceSq < minDistanceSq)
                 {
-                    // make a check which is more efficient than this
+                    // TODO: PLEASE make a check which is more efficient than this
                     bool isTarget = 
                     ((entity is AnimalEntityTemplate) && (entity is not Predator)) ||
                     (entity is Predator p && p != this && this.CannibalMode);
@@ -104,33 +101,5 @@ public class Predator: AnimalEntityTemplate
                 }
             }
         }
-
-       
-
-        // DECISION PHASE
-        if (closestFood != null)
-        {
-            SteerTowards(closestFood.Position);
-        }
-        else
-        {
-            Wander(deltaTime); // Keep moving if nothing is found
-        }
-
-        ApplyMovement(deltaTime);
-        this.Energy -= _metabolism.CalculateLoss(this.Velocity,this.SightRadius, deltaTime);
-
-        if (this.Energy >= ReproductionThreshold) 
-        { 
-            SpawnChild();
-        }
-
-        if (this.Energy <= 0)
-        {
-            this.IsPendingRemoval = true; 
-            return;
-        }
-        }
-
-
+    }
 }

@@ -33,7 +33,7 @@ namespace Ecosystem_Simulator.Entities
             Critter baby = new Critter(this.Position, new CritterGenome(this.Speed,this.SightRadius,this.MetabolismEfficiency,this.ReproductionThreshold,true),baby_energy );
 
             // Raise spawn event with baby critter
-            OnOnSpawnRequested(baby);
+            RequestSpawn(baby);
         }
 
 

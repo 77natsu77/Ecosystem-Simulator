@@ -20,8 +20,6 @@ SO the main thing is creating the g and h functions, then simply implementing A*
 
 public class Smarty : AnimalEntityTemplate
 {
-    // need to work on spatoial evaluation code, currently only have a best destination
-    // successful rendering but we need speciakl effects for when the scan occurs (sight radius goes green and the line goes round the circle)
     private float _scanTimer = 0f;
     private bool _hasPerformedAmbitionPulse = false; // First pulse: Identify best destination
     private bool _hasPerformedSafetyPulse = false; // Second pulse: Verify path safety before committing to it
@@ -52,6 +50,7 @@ public class Smarty : AnimalEntityTemplate
             SteerTowards(this.Position + targetDirection); // Steer towards the next waypoint in the path
         }
     }
+
     public Smarty(Vector2 startPos, SmartyGenome dna, float Energy = Settings.SmartyStartingEnergy) : base(startPos, dna, Energy)
     {
         // make new genome or create a general one
@@ -64,7 +63,7 @@ public class Smarty : AnimalEntityTemplate
     }
 
 
-    public override void SpawnChild() // need to make a system where reproduction only occurs when the smarty is in a safe location
+    public override void SpawnChild() // need to make a system where reproduction only occurs when the smarty is in a safe location or something similar
     {
         float baby_energy = this.Energy * Settings.SmartyBirthEnergyShareRatio;
         this.Energy -= baby_energy;
@@ -74,7 +73,7 @@ public class Smarty : AnimalEntityTemplate
 
 
         //  Trigger spawn event
-        OnOnSpawnRequested(baby);
+        RequestSpawn(baby);
     }
 
 
@@ -265,18 +264,19 @@ public class Smarty : AnimalEntityTemplate
 }
 
 
+// Highkey should move this somewhere else, but I don't really know where yet :(
 public class AStarGrid
 {
     public Node[,] Nodes;
-    private int _gridSize;
-    private const float TILE_SIZE = 7f; // TODO add this as a setting const rather than here
-    private const float MAX_PENALTY = 10000f; // Base penalty for empty nodes, can be adjusted based on nearby entities
+    private int _gridSize, _halfGridSize;
+    private const float TILE_SIZE = 7f; // TODO add this as a setting const rather than here, bigger size  = faster pathfinding but less precision, smaller size = slower pathfinding but more precise, need to find a good balance for this based on testing, also could potentially make this dynamic based on the entity's speed and sight radius, for example faster entities with larger sight radius could use a larger tile size to reduce the number of nodes and improve performance, while slower entities with smaller sight radius could use a smaller tile size for more precise pathfinding, this would add an interesting layer of strategy to the simulation, since different entities would have different pathfinding capabilities based on their traits, which creates a more dynamic and engaging simulation, this also allows for better predator avoidance and food finding behavior, since the entity will be able to see predators and food sources that are within its sight radius and make decisions based on that information when performing pathfinding calculations, which creates a more engaging and realistic simulation
+    private const float BASE_PENALTY = 10000f; // Base penalty for empty nodes, can be adjusted based on nearby entities
     private float _sightRadius;
     private Vector2 _currentPosition;
+    private  Queue<Vector2> _path = new Queue<Vector2>(); // Best path, either empty or populated with waypoints to follow
+    private PriorityQueue<Node, float> _openSet = new PriorityQueue<Node, float>(); // Using priority queue for O(log n) retrieval of node with lowest F cost
+    private HashSet<Node> _closedSet = new HashSet<Node>(); // Using Hashset for O(1) lookups to check if a node has already been evaluated
     private Node[] neighborNodes = new Node[4]; // up, down, left, right
-
-
-
     public void ApplyDynamicPenalties(IEnumerable<IEntity> nearbyEntities)
     {
         Node currentNode;
@@ -301,7 +301,7 @@ public class AStarGrid
                 }
                 else
                 {
-                    currentNode.MovementPenalty = MAX_PENALTY; // Base penalty for empty nodes
+                    currentNode.MovementPenalty = BASE_PENALTY; // Base penalty for empty nodes
                 }
             }
             else
@@ -317,14 +317,14 @@ public class AStarGrid
     {
         _currentPosition = currentPosition;
         _sightRadius = sightRadius;
-        int halfTiles = (int)Math.Ceiling(_sightRadius / TILE_SIZE);
-        _gridSize = halfTiles * 2 + 1;         // odd so centre is exact
+        _halfGridSize = (int)Math.Ceiling(_sightRadius / TILE_SIZE);
+        _gridSize = _halfGridSize * 2 + 1;         // odd so centre is exact
         Nodes = new Node[_gridSize, _gridSize];
         for (int x = 0; x < _gridSize; x++)
         {
             for (int y = 0; y < _gridSize; y++)
             {
-                Vector2 worldPos = _currentPosition + new Vector2((x - halfTiles) * TILE_SIZE, (y - halfTiles) * TILE_SIZE);
+                Vector2 worldPos = _currentPosition + new Vector2((x - _halfGridSize) * TILE_SIZE, (y - _halfGridSize) * TILE_SIZE);
                 Nodes[x, y] = new Node(x, y, worldPos);
             }
         }
@@ -335,23 +335,22 @@ public class AStarGrid
         _currentPosition = newCenter;
         _sightRadius = newSightRadius;
 
-        int halfTiles = _gridSize / 2;
+        // _halfGridSize = (int)Math.Ceiling(_sightRadius / TILE_SIZE);
         for (int x = 0; x < _gridSize; x++)
         {
             for (int y = 0; y < _gridSize; y++)
             {
                 // Shift node world positions to be relative to the NEW center
-                Nodes[x, y].Position = _currentPosition + new Vector2((x - halfTiles) * TILE_SIZE, (y - halfTiles) * TILE_SIZE);
+                Nodes[x, y].Position = _currentPosition + new Vector2((x - _halfGridSize) * TILE_SIZE, (y - _halfGridSize) * TILE_SIZE);
 
                 // Reset the node for the new scan
-                Nodes[x, y].MovementPenalty = MAX_PENALTY;
+                Nodes[x, y].MovementPenalty = BASE_PENALTY;
                 Nodes[x, y].GCost = float.MaxValue;
                 Nodes[x, y].ParentX = -1;
                 Nodes[x, y].ParentY = -1;
             }
         }
     }
-
 
     private Queue<Vector2> RetracePath(Node startNode, Node endNode)
     {
@@ -367,13 +366,11 @@ public class AStarGrid
         return new Queue<Vector2>(path); // Convert stack to queue for easier path following (dequeue from the front)
     }
 
-
     public float Heuristic(Node a, Node b)
     {
         // Using Euclidean distance as the heuristic for A* pathfinding, this is important for the A* algorithm to estimate the cost of reaching the target destination from any given node, since it provides a way to prioritize which nodes to explore based on their proximity to the target, this creates a more efficient pathfinding process, since the algorithm will be more likely to explore nodes that are closer to the target destination first, which can lead to finding the optimal path faster, especially in cases where there are many nodes and potential paths to evaluate, this also allows for better predator avoidance and food finding behavior, since the entity will be able to see predators and food sources that are within its sight radius and make decisions based on that information when performing pathfinding calculations, which creates a more engaging and realistic simulation
-        return Vector2.Distance(a.Position, b.Position); // could use manhattan distance but well use this for now
+        return Vector2.Distance(a.Position, b.Position); // could use manhattan distance as well to reduce computation time but we'll use this for now
     }
-
 
     public Node GetNodeFromCoords(Vector2 worldPos)
     {
@@ -394,54 +391,46 @@ public class AStarGrid
     }
 
 
-    // making a function which creates the best path to the best destination
+    // Implement A* algorithm to find path from center node to best node
     public Queue<Vector2> FindPath(Vector2 target)
     {
-        // this function will use the current position (center node) and the best destination node to perform the A* algorithm and find the best path from the current position to the best destination, this is important for the entity to be able to move towards good destinations based on the presence of food and predators in its sight radius, which creates a more engaging and realistic simulation, since in reality animals need to be able to find good paths towards food sources while avoiding predators in order to survive, this also allows for better predator avoidance and food finding behavior, since the entity will be able to see predators and food sources that are within its sight radius and make decisions based on that information when performing pathfinding calculations, which creates a more engaging and realistic simulation
-        Queue<Vector2> path = new Queue<Vector2>();
-        
-        
-
-        // Implement A* algorithm to find path from center node to best node
-        Node startNode = Nodes[_gridSize / 2, _gridSize / 2]; // Start at the center node, which corresponds to the entity's current position in the world, this is important for translating between grid coordinates and world coordinates when performing pathfinding calculations, since the A* algorithm operates on the grid but the entity needs to move in the world, this also allows us to easily calculate the world position of any node in the grid by adding the offset from the center node to the entity's current position, which simplifies the math and makes it easier to implement the pathfinding logic
-                                                              // use best target calculation to select the best node
+       _path.Clear();
         Node endNode = GetNodeFromCoords(target);
+
         if (endNode == null)
         {
             Console.WriteLine("Target is out of bounds for pathfinding.");
-            return path; // Target is out of bounds, return empty path
+            return _path; // Target is out of bounds, return empty path
         }
-        PriorityQueue<Node, float> openSet = new PriorityQueue<Node, float>();
-        HashSet<Node> closedSet = new HashSet<Node>();
 
+        Node startNode = Nodes[_gridSize / 2, _gridSize / 2]; 
+        
+        // Clearing instead of making new ones to reduce Garbage Collection slowing things down since this method is called quite frequently
+        _openSet.Clear();
+        _closedSet.Clear();
 
         startNode.GCost = 0f;
-        openSet.Enqueue(startNode, startNode.FCost);
+        _openSet.Enqueue(startNode, startNode.FCost);
 
-
-        while (openSet.TryDequeue(out Node currentNode, out float f))
+        while (_openSet.TryDequeue(out Node currentNode, out float f))
         {
-            if (closedSet.Contains(currentNode)) continue; // Skip if we've already evaluated this node
+            if (_closedSet.Contains(currentNode)) continue; // Skip if we've already evaluated this node
 
-            //Console.WriteLine($"Evaluating node at ({currentNode.GridX}, {currentNode.GridY})");
             if (currentNode.GridX == endNode.GridX && currentNode.GridY == endNode.GridY)
             {
                 return RetracePath(startNode, endNode); // Found the path to the best destination
             }
 
 
-            closedSet.Add(currentNode);
-            currentNode.GetNeighbors(Nodes, ref neighborNodes); // Get the neighboring nodes (up, down, left, right) for pathfinding calculations, this is important for the A* algorithm to explore the grid and find the best path towards the target destination, since it needs to evaluate the cost of moving through each neighboring node in order to determine which path is optimal, this also allows for better predator avoidance and food finding behavior, since the entity will be able to see predators and food sources that are within its sight radius and make decisions based on that information when performing pathfinding calculations, which creates a more engaging and realistic simulation
+            _closedSet.Add(currentNode);
+            currentNode.GetNeighbors(Nodes, ref neighborNodes); // Get the neighboring nodes (up, down, left, right) for pathfinding calculations
 
             for (int i = 0; i < neighborNodes.Length; i++)
             {
                 Node neighbor = neighborNodes[i];
-                if (neighbor == null || closedSet.Contains(neighbor))
-                {continue; // Skip out of bounds or already evaluated neighbors
-                }
-                // G cost is the cost from the start node to this neighbor, which is the G cost of the current node plus the distance from the current node to the neighbor plus any movement penalty for the neighbor, this is important for the A* algorithm to evaluate the cost of moving through this neighbor when finding the best path to the target destination, since nodes that are near predators will have a higher movement penalty, this will increase the G cost for those nodes, which will make the A* algorithm less likely to choose paths that go near predators, and nodes that are near food will have a lower movement penalty (or even a bonus), which will decrease the G cost for those nodes, which will make the A* algorithm more likely to choose paths that go towards food, this creates a more realistic and interesting simulation, since in reality animals need to avoid predators in order to survive and seek out food in order to sustain themselves, this also allows for better predator avoidance and food finding behavior, since the entity will be able to see predators and food sources that are within its sight radius and make decisions based on that information when performing pathfinding calculations, which creates a more engaging and realistic simulation
-                float tentativeGCost = currentNode.GCost + Vector2.Distance(currentNode.Position, neighbor.Position) + neighbor.MovementPenalty;
+                if (neighbor == null || _closedSet.Contains(neighbor)) continue; // Skip out of bounds or already evaluated neighbors
 
+                float tentativeGCost = currentNode.GCost + Vector2.Distance(currentNode.Position, neighbor.Position) + neighbor.MovementPenalty;
 
                 if (tentativeGCost < neighbor.GCost)
                 {
@@ -450,35 +439,29 @@ public class AStarGrid
                     neighbor.GCost = tentativeGCost;
                     neighbor.HCost = Vector2.Distance(neighbor.Position, endNode.Position);
 
-
                     // re enqueue if better cost is found
-                    openSet.Enqueue(neighbor, neighbor.FCost);
+                    _openSet.Enqueue(neighbor, neighbor.FCost);
                 }
             }
         }
-       // Console.WriteLine("No path found.");
-        return path;
+       // no path found, return empty path
+        return _path;
     }
-
-
-
-
-
 }
+
 public class Node
 {
     public int GridX;
     public int GridY;
     public float MovementPenalty; // High for predators, low for food
-    public float GCost;
-    public float HCost;
+    public float GCost; // Distance from start node and movement penalties of nodes along the way
+    public float HCost; // Heuristic distance to end node
     public float FCost => GCost + HCost;
-
-    public int ParentX; // To reconstruct the path later
+    public Vector2 Position; // World position of the node, used for distance calculations and movement targets
+    // To reconstruct the path later
+    public int ParentX; 
     public int ParentY;
-    public Vector2 Position;
-
-
+    
     public Node(int gridX, int gridY, Vector2 nodePosition)
     {
         GridX = gridX;
@@ -496,7 +479,6 @@ public class Node
     {
         int maxX = grid.GetLength(0);
         int maxY = grid.GetLength(1);
-
 
         // Up
         if (GridY + 1 < maxY) neighborNodes[0] = grid[GridX, GridY + 1];
